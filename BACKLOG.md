@@ -8,8 +8,11 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### [Security] CORS vollständig offen (#12)
-- Origin-Einschränkung konfigurieren
+### [Security] JWT Secret unsicherer Default (#13)
+- Startup-Validierung: Server darf mit Default-Secret nicht starten
+
+### [Security] Fehlende Validierung des Encryption Key (#14)
+- Key-Länge prüfen, leeren Fallback verhindern
 
 ---
 
@@ -18,12 +21,6 @@ Tasks are ordered by priority within each column.
 ---
 
 ## Backlog
-
-### [Security] JWT Secret unsicherer Default (#13)
-- Startup-Validierung: Server darf mit Default-Secret nicht starten
-
-### [Security] Fehlende Validierung des Encryption Key (#14)
-- Key-Länge prüfen, leeren Fallback verhindern
 
 ### [Security] JWT in localStorage (#15)
 - Risikobewertung: HttpOnly Cookie als Alternative prüfen
@@ -62,6 +59,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#12 [Security] CORS Restriction](https://github.com/patrickblattner/samba4-ad-webui/issues/12)
 - [#11 [Security] Rate Limiting Login](https://github.com/patrickblattner/samba4-ad-webui/issues/11)
 - [#10 [Security] HTTP Security Headers](https://github.com/patrickblattner/samba4-ad-webui/issues/10)
 - [#22 [QA] React Error Boundary](https://github.com/patrickblattner/samba4-ad-webui/issues/22)
