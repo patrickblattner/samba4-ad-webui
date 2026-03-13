@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { User, Users, Monitor, HelpCircle, Mail, Loader2 } from 'lucide-react'
 import type { ObjectSummary } from '@samba-ad/shared'
+import { useQueryClient } from '@tanstack/react-query'
 import { useObjectList } from '@/hooks/useObjectList'
 import { useDirectoryStore } from '@/stores/directoryStore'
-import { useDeleteUser, useEnableUser, useDisableUser } from '@/hooks/useUserMutations'
-import { useDeleteGroup } from '@/hooks/useGroupMutations'
-import { useDeleteComputer } from '@/hooks/useComputerMutations'
+import { useDialogStore } from '@/stores/dialogStore'
+import { useDeleteUser, useEnableUser, useDisableUser, useMoveUser } from '@/hooks/useUserMutations'
+import { useDeleteGroup, useMoveGroup } from '@/hooks/useGroupMutations'
+import { useDeleteComputer, useMoveComputer } from '@/hooks/useComputerMutations'
 import {
   Table,
   TableBody,
@@ -25,6 +27,9 @@ import ComputerPropertiesDialog from '@/components/computers/ComputerPropertiesD
 import CreateComputerDialog from '@/components/computers/CreateComputerDialog'
 import CreateOuDialog from '@/components/ous/CreateOuDialog'
 import DeleteOuDialog from '@/components/ous/DeleteOuDialog'
+import ObjectContextMenu from '@/components/context-menus/ObjectContextMenu'
+import ConfirmDialog from '@/components/shared/ConfirmDialog'
+import MoveObjectDialog from '@/components/shared/MoveObjectDialog'
 
 function ObjectIcon({ type }: { type: ObjectSummary['type'] }) {
   const className = 'h-4 w-4 shrink-0'
@@ -66,7 +71,9 @@ function extractNameFromDn(dn: string): string {
 
 export default function ObjectList() {
   const selectedNode = useDirectoryStore((s) => s.selectedNode)
+  const { activeDialog, closeDialog } = useDialogStore()
   const { data, isLoading, error } = useObjectList(selectedNode)
+  const queryClient = useQueryClient()
 
   const [selectedDn, setSelectedDn] = useState<string | null>(null)
 
@@ -90,15 +97,49 @@ export default function ObjectList() {
   const [createOuOpen, setCreateOuOpen] = useState(false)
   const [deleteOuOpen, setDeleteOuOpen] = useState(false)
 
+  // React to dialog requests from tree context menu
+  useEffect(() => {
+    if (!activeDialog) return
+    switch (activeDialog) {
+      case 'createUser':
+        setCreateUserOpen(true)
+        break
+      case 'createGroup':
+        setCreateGroupOpen(true)
+        break
+      case 'createComputer':
+        setCreateComputerOpen(true)
+        break
+      case 'createOu':
+        setCreateOuOpen(true)
+        break
+      case 'deleteOu':
+        setDeleteOuOpen(true)
+        break
+    }
+    closeDialog()
+  }, [activeDialog, closeDialog])
+
+  // Confirm dialog
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTarget, setConfirmTarget] = useState<ObjectSummary | null>(null)
+
+  // Move dialog
+  const [moveOpen, setMoveOpen] = useState(false)
+  const [moveTarget, setMoveTarget] = useState<ObjectSummary | null>(null)
+
   const deleteUserMutation = useDeleteUser()
   const enableMutation = useEnableUser()
   const disableMutation = useDisableUser()
   const deleteGroupMutation = useDeleteGroup()
   const deleteComputerMutation = useDeleteComputer()
+  const moveUserMutation = useMoveUser()
+  const moveGroupMutation = useMoveGroup()
+  const moveComputerMutation = useMoveComputer()
 
   const selectedObj = data?.data.find((o) => o.dn === selectedDn) ?? null
 
-  function handleDoubleClick(obj: ObjectSummary) {
+  const openProperties = useCallback((obj: ObjectSummary) => {
     switch (obj.type) {
       case 'user':
         setUserPropertiesDn(obj.dn)
@@ -113,24 +154,34 @@ export default function ObjectList() {
         setComputerPropertiesOpen(true)
         break
     }
+  }, [])
+
+  function handleDoubleClick(obj: ObjectSummary) {
+    openProperties(obj)
   }
 
-  function handleDelete() {
-    if (!selectedDn || !selectedObj) return
-    if (!window.confirm(`Delete ${selectedObj.name}?`)) return
+  function requestDelete(obj?: ObjectSummary | null) {
+    const target = obj ?? selectedObj
+    if (!target) return
+    setConfirmTarget(target)
+    setConfirmOpen(true)
+  }
 
-    switch (selectedObj.type) {
+  function executeDelete() {
+    if (!confirmTarget) return
+    switch (confirmTarget.type) {
       case 'user':
-        deleteUserMutation.mutate(selectedDn)
+        deleteUserMutation.mutate(confirmTarget.dn)
         break
       case 'group':
-        deleteGroupMutation.mutate(selectedDn)
+        deleteGroupMutation.mutate(confirmTarget.dn)
         break
       case 'computer':
-        deleteComputerMutation.mutate(selectedDn)
+        deleteComputerMutation.mutate(confirmTarget.dn)
         break
     }
     setSelectedDn(null)
+    setConfirmTarget(null)
   }
 
   function handleEnable() {
@@ -148,6 +199,84 @@ export default function ObjectList() {
     setPasswordResetOpen(true)
   }
 
+  function handleMove(obj?: ObjectSummary | null) {
+    const target = obj ?? selectedObj
+    if (!target) return
+    setMoveTarget(target)
+    setMoveOpen(true)
+  }
+
+  function executeMove(targetOu: string) {
+    if (!moveTarget) return
+    const dn = moveTarget.dn
+    switch (moveTarget.type) {
+      case 'user':
+        moveUserMutation.mutate({ dn, targetOu }, { onSuccess: () => setMoveOpen(false) })
+        break
+      case 'group':
+        moveGroupMutation.mutate({ dn, targetOu }, { onSuccess: () => setMoveOpen(false) })
+        break
+      case 'computer':
+        moveComputerMutation.mutate({ dn, targetOu }, { onSuccess: () => setMoveOpen(false) })
+        break
+    }
+  }
+
+  function handleCopyDn(dn: string) {
+    navigator.clipboard.writeText(dn).catch(() => {
+      // Fallback: silently fail
+    })
+  }
+
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ['objects'] })
+    queryClient.invalidateQueries({ queryKey: ['tree'] })
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Don't trigger shortcuts when typing in input fields
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return
+      }
+
+      // Check if any dialog is open
+      if (
+        userPropertiesOpen || createUserOpen || passwordResetOpen ||
+        groupPropertiesOpen || createGroupOpen ||
+        computerPropertiesOpen || createComputerOpen ||
+        createOuOpen || deleteOuOpen || confirmOpen || moveOpen
+      ) {
+        return
+      }
+
+      switch (e.key) {
+        case 'F5':
+          e.preventDefault()
+          handleRefresh()
+          break
+        case 'Delete':
+          if (selectedObj) {
+            requestDelete(selectedObj)
+          }
+          break
+        case 'Enter':
+          if (selectedObj) {
+            openProperties(selectedObj)
+          }
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedObj, userPropertiesOpen, createUserOpen, passwordResetOpen,
+      groupPropertiesOpen, createGroupOpen, computerPropertiesOpen,
+      createComputerOpen, createOuOpen, deleteOuOpen, confirmOpen, moveOpen])
+
   if (!selectedNode) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -155,6 +284,8 @@ export default function ObjectList() {
       </div>
     )
   }
+
+  const isMovePending = moveUserMutation.isPending || moveGroupMutation.isPending || moveComputerMutation.isPending
 
   return (
     <div className="flex h-full flex-col">
@@ -166,7 +297,7 @@ export default function ObjectList() {
         onNewComputer={() => setCreateComputerOpen(true)}
         onNewOu={() => setCreateOuOpen(true)}
         onDeleteOu={() => setDeleteOuOpen(true)}
-        onDelete={handleDelete}
+        onDelete={() => requestDelete()}
         onEnable={handleEnable}
         onDisable={handleDisable}
         onResetPassword={handleResetPassword}
@@ -203,36 +334,50 @@ export default function ObjectList() {
             </TableHeader>
             <TableBody>
               {data.data.map((obj) => (
-                <TableRow
+                <ObjectContextMenu
                   key={obj.dn}
-                  className={cn(
-                    'cursor-pointer',
-                    selectedDn === obj.dn && 'bg-accent',
-                  )}
-                  onClick={() => setSelectedDn(obj.dn)}
-                  onDoubleClick={() => handleDoubleClick(obj)}
+                  object={obj}
+                  onProperties={() => openProperties(obj)}
+                  onDelete={() => requestDelete(obj)}
+                  onResetPassword={obj.type === 'user' ? () => {
+                    setSelectedDn(obj.dn)
+                    setPasswordResetOpen(true)
+                  } : undefined}
+                  onEnable={obj.type === 'user' && obj.enabled === false ? () => enableMutation.mutate(obj.dn) : undefined}
+                  onDisable={obj.type === 'user' && obj.enabled !== false ? () => disableMutation.mutate(obj.dn) : undefined}
+                  onMove={() => handleMove(obj)}
+                  onCopyDn={() => handleCopyDn(obj.dn)}
                 >
-                  <TableCell>
-                    <div
-                      className={cn(
-                        'flex items-center gap-2',
-                        obj.type === 'user' && obj.enabled === false && 'text-muted-foreground',
-                      )}
-                    >
-                      <ObjectIcon type={obj.type} />
-                      <span className="truncate">{obj.name}</span>
-                      {obj.type === 'user' && obj.enabled === false && (
-                        <span className="ml-1 text-xs text-muted-foreground">(disabled)</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {typeLabel(obj.type)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {obj.description ?? ''}
-                  </TableCell>
-                </TableRow>
+                  <TableRow
+                    className={cn(
+                      'cursor-pointer',
+                      selectedDn === obj.dn && 'bg-accent',
+                    )}
+                    onClick={() => setSelectedDn(obj.dn)}
+                    onDoubleClick={() => handleDoubleClick(obj)}
+                  >
+                    <TableCell>
+                      <div
+                        className={cn(
+                          'flex items-center gap-2',
+                          obj.type === 'user' && obj.enabled === false && 'text-muted-foreground',
+                        )}
+                      >
+                        <ObjectIcon type={obj.type} />
+                        <span className="truncate">{obj.name}</span>
+                        {obj.type === 'user' && obj.enabled === false && (
+                          <span className="ml-1 text-xs text-muted-foreground">(disabled)</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {typeLabel(obj.type)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {obj.description ?? ''}
+                    </TableCell>
+                  </TableRow>
+                </ObjectContextMenu>
               ))}
             </TableBody>
           </Table>
@@ -243,6 +388,27 @@ export default function ObjectList() {
           )}
         </div>
       )}
+
+      {/* Confirm delete dialog */}
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Object"
+        description={`Are you sure you want to delete "${confirmTarget?.name ?? ''}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={executeDelete}
+      />
+
+      {/* Move object dialog */}
+      <MoveObjectDialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        objectName={moveTarget?.name ?? ''}
+        objectDn={moveTarget?.dn ?? ''}
+        onMove={executeMove}
+        isPending={isMovePending}
+      />
 
       {/* User dialogs */}
       <UserPropertiesDialog

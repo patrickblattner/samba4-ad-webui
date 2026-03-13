@@ -4,6 +4,7 @@ import {
   createComputer,
   updateComputer,
   deleteComputer,
+  moveComputer,
 } from '@/api/computers'
 
 export function useCreateComputer() {
@@ -34,6 +35,18 @@ export function useDeleteComputer() {
     mutationFn: (dn: string) => deleteComputer(dn),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['objects'] })
+    },
+  })
+}
+
+export function useMoveComputer() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dn, targetOu }: { dn: string; targetOu: string }) =>
+      moveComputer(dn, targetOu),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['objects'] })
+      qc.invalidateQueries({ queryKey: ['tree'] })
     },
   })
 }

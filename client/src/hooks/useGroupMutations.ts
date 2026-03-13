@@ -6,6 +6,7 @@ import {
   deleteGroup,
   addGroupMembers,
   removeGroupMembers,
+  moveGroup,
 } from '@/api/groups'
 
 export function useCreateGroup() {
@@ -58,6 +59,18 @@ export function useRemoveGroupMembers() {
       removeGroupMembers(dn, members),
     onSuccess: (_result, { dn }) => {
       qc.invalidateQueries({ queryKey: ['group', dn] })
+    },
+  })
+}
+
+export function useMoveGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dn, targetOu }: { dn: string; targetOu: string }) =>
+      moveGroup(dn, targetOu),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['objects'] })
+      qc.invalidateQueries({ queryKey: ['tree'] })
     },
   })
 }

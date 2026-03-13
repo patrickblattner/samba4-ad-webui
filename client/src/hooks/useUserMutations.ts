@@ -7,6 +7,7 @@ import {
   resetPassword,
   enableUser,
   disableUser,
+  moveUser,
 } from '@/api/users'
 
 export function useCreateUser() {
@@ -66,6 +67,18 @@ export function useDisableUser() {
     onSuccess: (_result, dn) => {
       qc.invalidateQueries({ queryKey: ['user', dn] })
       qc.invalidateQueries({ queryKey: ['objects'] })
+    },
+  })
+}
+
+export function useMoveUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dn, targetOu }: { dn: string; targetOu: string }) =>
+      moveUser(dn, targetOu),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['objects'] })
+      qc.invalidateQueries({ queryKey: ['tree'] })
     },
   })
 }

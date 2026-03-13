@@ -1,8 +1,11 @@
 import { ChevronRight, FolderOpen, Folder, Database, Box, Loader2 } from 'lucide-react'
 import type { TreeNode } from '@samba-ad/shared'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTreeRoot, useTreeChildren } from '@/hooks/useTreeData'
 import { useDirectoryStore } from '@/stores/directoryStore'
+import { useDialogStore } from '@/stores/dialogStore'
 import { cn } from '@/lib/utils'
+import TreeContextMenu from '@/components/context-menus/TreeContextMenu'
 
 function NodeIcon({ type, isExpanded }: { type: TreeNode['type']; isExpanded: boolean }) {
   const className = 'h-4 w-4 shrink-0'
@@ -29,6 +32,8 @@ interface TreeNodeItemProps {
 
 function TreeNodeItem({ node, level }: TreeNodeItemProps) {
   const { selectedNode, expandedNodes, selectNode, toggleNode } = useDirectoryStore()
+  const { openDialog } = useDialogStore()
+  const queryClient = useQueryClient()
   const isExpanded = expandedNodes.has(node.dn)
   const isSelected = selectedNode === node.dn
 
@@ -46,38 +51,52 @@ function TreeNodeItem({ node, level }: TreeNodeItemProps) {
     toggleNode(node.dn)
   }
 
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ['tree'] })
+    queryClient.invalidateQueries({ queryKey: ['objects'] })
+  }
+
   return (
     <div>
-      <div
-        className={cn(
-          'flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-sm hover:bg-accent',
-          isSelected && 'bg-accent font-medium',
-        )}
-        style={{ paddingLeft: `${level * 16 + 4}px` }}
-        onClick={handleSelect}
+      <TreeContextMenu
+        onNewUser={() => { selectNode(node.dn); openDialog('createUser') }}
+        onNewGroup={() => { selectNode(node.dn); openDialog('createGroup') }}
+        onNewComputer={() => { selectNode(node.dn); openDialog('createComputer') }}
+        onNewOu={() => { selectNode(node.dn); openDialog('createOu') }}
+        onDeleteOu={() => { selectNode(node.dn); openDialog('deleteOu') }}
+        onRefresh={handleRefresh}
       >
-        {node.hasChildren ? (
-          <button
-            onClick={handleChevronClick}
-            className="flex h-4 w-4 shrink-0 items-center justify-center"
-          >
-            {isLoading ? (
-              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-            ) : (
-              <ChevronRight
-                className={cn(
-                  'h-3 w-3 text-muted-foreground transition-transform',
-                  isExpanded && 'rotate-90',
-                )}
-              />
-            )}
-          </button>
-        ) : (
-          <span className="h-4 w-4 shrink-0" />
-        )}
-        <NodeIcon type={node.type} isExpanded={isExpanded} />
-        <span className="truncate">{node.name}</span>
-      </div>
+        <div
+          className={cn(
+            'flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-sm hover:bg-accent',
+            isSelected && 'bg-accent font-medium',
+          )}
+          style={{ paddingLeft: `${level * 16 + 4}px` }}
+          onClick={handleSelect}
+        >
+          {node.hasChildren ? (
+            <button
+              onClick={handleChevronClick}
+              className="flex h-4 w-4 shrink-0 items-center justify-center"
+            >
+              {isLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              ) : (
+                <ChevronRight
+                  className={cn(
+                    'h-3 w-3 text-muted-foreground transition-transform',
+                    isExpanded && 'rotate-90',
+                  )}
+                />
+              )}
+            </button>
+          ) : (
+            <span className="h-4 w-4 shrink-0" />
+          )}
+          <NodeIcon type={node.type} isExpanded={isExpanded} />
+          <span className="truncate">{node.name}</span>
+        </div>
+      </TreeContextMenu>
       {isExpanded && children && (
         <div>
           {children.map((child) => (
