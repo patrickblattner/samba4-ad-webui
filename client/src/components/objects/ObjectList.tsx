@@ -23,6 +23,8 @@ import GroupPropertiesDialog from '@/components/groups/GroupPropertiesDialog'
 import CreateGroupDialog from '@/components/groups/CreateGroupDialog'
 import ComputerPropertiesDialog from '@/components/computers/ComputerPropertiesDialog'
 import CreateComputerDialog from '@/components/computers/CreateComputerDialog'
+import CreateOuDialog from '@/components/ous/CreateOuDialog'
+import DeleteOuDialog from '@/components/ous/DeleteOuDialog'
 
 function ObjectIcon({ type }: { type: ObjectSummary['type'] }) {
   const className = 'h-4 w-4 shrink-0'
@@ -56,6 +58,12 @@ function typeLabel(type: ObjectSummary['type']): string {
   }
 }
 
+/** Extract a display name from a DN for the OU delete dialog */
+function extractNameFromDn(dn: string): string {
+  const match = dn.match(/^(?:OU|CN)=([^,]+)/i)
+  return match ? match[1] : dn
+}
+
 export default function ObjectList() {
   const selectedNode = useDirectoryStore((s) => s.selectedNode)
   const { data, isLoading, error } = useObjectList(selectedNode)
@@ -77,6 +85,10 @@ export default function ObjectList() {
   const [computerPropertiesDn, setComputerPropertiesDn] = useState<string | null>(null)
   const [computerPropertiesOpen, setComputerPropertiesOpen] = useState(false)
   const [createComputerOpen, setCreateComputerOpen] = useState(false)
+
+  // OU dialogs
+  const [createOuOpen, setCreateOuOpen] = useState(false)
+  const [deleteOuOpen, setDeleteOuOpen] = useState(false)
 
   const deleteUserMutation = useDeleteUser()
   const enableMutation = useEnableUser()
@@ -152,6 +164,8 @@ export default function ObjectList() {
         onNewUser={() => setCreateUserOpen(true)}
         onNewGroup={() => setCreateGroupOpen(true)}
         onNewComputer={() => setCreateComputerOpen(true)}
+        onNewOu={() => setCreateOuOpen(true)}
+        onDeleteOu={() => setDeleteOuOpen(true)}
         onDelete={handleDelete}
         onEnable={handleEnable}
         onDisable={handleDisable}
@@ -263,6 +277,16 @@ export default function ObjectList() {
       />
 
       <CreateComputerDialog open={createComputerOpen} onOpenChange={setCreateComputerOpen} />
+
+      {/* OU dialogs */}
+      <CreateOuDialog open={createOuOpen} onOpenChange={setCreateOuOpen} />
+
+      <DeleteOuDialog
+        dn={selectedNode}
+        ouName={selectedNode ? extractNameFromDn(selectedNode) : ''}
+        open={deleteOuOpen}
+        onOpenChange={setDeleteOuOpen}
+      />
     </div>
   )
 }

@@ -15,6 +15,17 @@ async function navigateToUsers(page: Page) {
   await expect(page.locator('table').getByText('Domain Admins').first()).toBeVisible({ timeout: 10000 })
 }
 
+/** Double-click a table row by dispatching a native dblclick event on the row's first cell */
+async function dblclickTableRow(page: Page, text: string) {
+  const row = page.locator('table tbody tr', { hasText: text }).first()
+  await expect(row).toBeVisible({ timeout: 5000 })
+  await page.waitForTimeout(300)
+  await row.evaluate((el) => {
+    const cell = el.querySelector('td')
+    if (cell) cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+  })
+}
+
 test.describe('Group Management', () => {
   test.beforeEach(async ({ page }) => {
     await login(page)
@@ -23,8 +34,7 @@ test.describe('Group Management', () => {
   test('can open group properties by double-clicking', async ({ page }) => {
     await navigateToUsers(page)
 
-    const groupRow = page.locator('table tr', { hasText: 'Domain Admins' }).first()
-    await groupRow.dblclick()
+    await dblclickTableRow(page, 'Domain Admins')
 
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole('tab', { name: 'General' })).toBeVisible()
@@ -33,8 +43,7 @@ test.describe('Group Management', () => {
   test('group properties dialog has all tabs', async ({ page }) => {
     await navigateToUsers(page)
 
-    const groupRow = page.locator('table tr', { hasText: 'Domain Admins' }).first()
-    await groupRow.dblclick()
+    await dblclickTableRow(page, 'Domain Admins')
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
 
     const expectedTabs = ['General', 'Members', 'Member Of', 'Managed By']
@@ -46,8 +55,7 @@ test.describe('Group Management', () => {
   test('can view group members', async ({ page }) => {
     await navigateToUsers(page)
 
-    const groupRow = page.locator('table tr', { hasText: 'Domain Admins' }).first()
-    await groupRow.dblclick()
+    await dblclickTableRow(page, 'Domain Admins')
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
 
     await page.getByRole('tab', { name: 'Members' }).click()

@@ -15,6 +15,17 @@ async function navigateToUsers(page: Page) {
   await expect(page.locator('table').getByText('Administrator').first()).toBeVisible({ timeout: 10000 })
 }
 
+/** Double-click a table row by dispatching a native dblclick event on the row's first cell */
+async function dblclickTableRow(page: Page, text: string) {
+  const row = page.locator('table tbody tr', { hasText: text }).first()
+  await expect(row).toBeVisible({ timeout: 5000 })
+  await page.waitForTimeout(300)
+  await row.evaluate((el) => {
+    const cell = el.querySelector('td')
+    if (cell) cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+  })
+}
+
 test.describe('User Management', () => {
   test.beforeEach(async ({ page }) => {
     await login(page)
@@ -23,8 +34,7 @@ test.describe('User Management', () => {
   test('can open user properties by double-clicking a user row', async ({ page }) => {
     await navigateToUsers(page)
 
-    const adminRow = page.locator('table tr', { hasText: 'Administrator' }).first()
-    await adminRow.dblclick()
+    await dblclickTableRow(page, 'Administrator')
 
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole('tab', { name: 'General' })).toBeVisible()
@@ -33,8 +43,7 @@ test.describe('User Management', () => {
   test('user properties dialog has all ADUC tabs', async ({ page }) => {
     await navigateToUsers(page)
 
-    const adminRow = page.locator('table tr', { hasText: 'Administrator' }).first()
-    await adminRow.dblclick()
+    await dblclickTableRow(page, 'Administrator')
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
 
     const expectedTabs = ['General', 'Address', 'Account', 'Profile', 'Telephones', 'Organization', 'Member Of']
@@ -46,8 +55,7 @@ test.describe('User Management', () => {
   test('can switch between property tabs', async ({ page }) => {
     await navigateToUsers(page)
 
-    const adminRow = page.locator('table tr', { hasText: 'Administrator' }).first()
-    await adminRow.dblclick()
+    await dblclickTableRow(page, 'Administrator')
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
 
     // Click Account tab
@@ -91,14 +99,14 @@ test.describe('User Management', () => {
     await navigateToUsers(page)
 
     // Delete button should be disabled when nothing is selected
-    await expect(page.getByRole('button', { name: /delete/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled()
 
     // Click a user row to select it
     const adminRow = page.locator('table tr', { hasText: 'Administrator' }).first()
     await adminRow.click()
 
     // Delete button should now be enabled
-    await expect(page.getByRole('button', { name: /delete/i })).toBeEnabled({ timeout: 3000 })
+    await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeEnabled({ timeout: 3000 })
   })
 })
 
@@ -116,7 +124,7 @@ test('cleanup: delete e2e test user', async ({ page }) => {
 
     // Set up confirm handler and click delete
     page.on('dialog', dialog => dialog.accept())
-    const deleteBtn = page.getByRole('button', { name: /delete/i })
+    const deleteBtn = page.getByRole('button', { name: 'Delete', exact: true })
     await expect(deleteBtn).toBeEnabled({ timeout: 3000 })
     await deleteBtn.click()
     await page.waitForTimeout(2000)

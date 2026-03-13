@@ -17,6 +17,7 @@ import OperatingSystemTab from './tabs/OperatingSystemTab'
 import LocationTab from './tabs/LocationTab'
 import MemberOfTab from './tabs/MemberOfTab'
 import ManagedByTab from './tabs/ManagedByTab'
+import AttributeEditorTab from '@/components/attributes/AttributeEditorTab'
 
 interface ComputerPropertiesDialogProps {
   dn: string | null
@@ -106,6 +107,7 @@ export default function ComputerPropertiesDialog({
                 <TabsTrigger value="location">Location</TabsTrigger>
                 <TabsTrigger value="memberOf">Member Of</TabsTrigger>
                 <TabsTrigger value="managedBy">Managed By</TabsTrigger>
+                <TabsTrigger value="attributeEditor">Attribute Editor</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto px-1">
@@ -127,6 +129,9 @@ export default function ComputerPropertiesDialog({
                     draft={draft}
                     onChange={handleChange}
                   />
+                </TabsContent>
+                <TabsContent value="attributeEditor">
+                  <AttributeEditorTab dn={dn!} />
                 </TabsContent>
               </div>
             </Tabs>

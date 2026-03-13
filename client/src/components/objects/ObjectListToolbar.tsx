@@ -1,4 +1,4 @@
-import { UserPlus, Users, Monitor, Trash2, UserCheck, UserX, KeyRound } from 'lucide-react'
+import { UserPlus, Users, Monitor, Trash2, UserCheck, UserX, KeyRound, FolderPlus, FolderMinus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
@@ -8,6 +8,8 @@ interface ObjectListToolbarProps {
   onNewUser: () => void
   onNewGroup: () => void
   onNewComputer: () => void
+  onNewOu: () => void
+  onDeleteOu: () => void
   onDelete: () => void
   onEnable: () => void
   onDisable: () => void
@@ -20,6 +22,8 @@ export default function ObjectListToolbar({
   onNewUser,
   onNewGroup,
   onNewComputer,
+  onNewOu,
+  onDeleteOu,
   onDelete,
   onEnable,
   onDisable,
@@ -29,7 +33,7 @@ export default function ObjectListToolbar({
   const hasSelection = selectedType !== null
 
   return (
-    <div className="flex items-center gap-1 border-b px-2 py-1">
+    <div className="flex items-center gap-1 border-b px-2 py-1 flex-wrap">
       <Button variant="ghost" size="sm" onClick={onNewUser} title="New User">
         <UserPlus className="mr-1 h-4 w-4" />
         New User
@@ -45,6 +49,11 @@ export default function ObjectListToolbar({
         New Computer
       </Button>
 
+      <Button variant="ghost" size="sm" onClick={onNewOu} title="New Organizational Unit">
+        <FolderPlus className="mr-1 h-4 w-4" />
+        New OU
+      </Button>
+
       <Separator orientation="vertical" className="mx-1 h-6" />
 
       <Button
@@ -56,6 +65,16 @@ export default function ObjectListToolbar({
       >
         <Trash2 className="mr-1 h-4 w-4" />
         Delete
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onDeleteOu}
+        title="Delete OU (selected in tree)"
+      >
+        <FolderMinus className="mr-1 h-4 w-4" />
+        Delete OU
       </Button>
 
       {isUser && (

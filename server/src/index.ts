@@ -8,6 +8,8 @@ import objectsRoutes from './routes/objects.js'
 import usersRoutes from './routes/users.js'
 import groupsRoutes from './routes/groups.js'
 import computersRoutes from './routes/computers.js'
+import attributesRoutes from './routes/attributes.js'
+import ousRoutes from './routes/ous.js'
 
 const app = express()
 
@@ -24,6 +26,8 @@ app.use('/api/objects', objectsRoutes)
 app.use('/api/users', usersRoutes)
 app.use('/api/groups', groupsRoutes)
 app.use('/api/computers', computersRoutes)
+app.use('/api/attributes', attributesRoutes)
+app.use('/api/ous', ousRoutes)
 
 app.use(errorHandler)
 
