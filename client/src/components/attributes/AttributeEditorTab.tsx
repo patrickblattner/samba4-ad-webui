@@ -157,7 +157,7 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
         />
       </div>
 
-      <div className="border rounded-md max-h-[340px] overflow-auto">
+      <div className="border rounded-md max-h-[480px] overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>

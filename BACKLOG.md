@@ -8,6 +8,13 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
+### sAMAccountName editierbar machen + Validierung (#31)
+- sAMAccountName in Properties-Dialogen editierbar machen
+- Längenvalidierung: User 20, Group 256, Computer 15 Zeichen
+- Illegale Zeichen prüfen: " / \ [ ] : ; | = , + * ? < >
+- Validierung auch in Create-Dialogen
+- Fehlermeldung vor dem Speichern (Apply)
+
 ---
 
 ## Todo

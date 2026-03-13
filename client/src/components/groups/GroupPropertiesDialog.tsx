@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { UpdateGroupRequest, GroupScope, GroupCategory } from '@samba-ad/shared'
-import { GROUP_TYPE } from '@samba-ad/shared'
+import { GROUP_TYPE, validateSamAccountName } from '@samba-ad/shared'
 import { useGroup } from '@/hooks/useGroup'
 import { useUpdateGroup, useAddGroupMembers, useRemoveGroupMembers } from '@/hooks/useGroupMutations'
 import {
@@ -65,6 +65,7 @@ export default function GroupPropertiesDialog({
   const [activeTab, setActiveTab] = useState('general')
   const [scopeOverride, setScopeOverride] = useState<GroupScope | null>(null)
   const [categoryOverride, setCategoryOverride] = useState<GroupCategory | null>(null)
+  const [validationError, setValidationError] = useState('')
 
   // Reset draft when group data loads or dialog opens
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function GroupPropertiesDialog({
       setDraft({})
       setScopeOverride(null)
       setCategoryOverride(null)
+      setValidationError('')
     }
   }, [group])
 
@@ -89,18 +91,26 @@ export default function GroupPropertiesDialog({
   const hasGroupTypeChange = scopeOverride !== null || categoryOverride !== null
   const hasPendingChanges = Object.keys(draft).length > 0 || hasGroupTypeChange
 
+  function validate(): boolean {
+    setValidationError('')
+    if (draft.sAMAccountName !== undefined) {
+      const result = validateSamAccountName(draft.sAMAccountName, 'group')
+      if (!result.valid) {
+        setValidationError(result.error!)
+        return false
+      }
+    }
+    return true
+  }
+
   async function handleApply() {
     if (!dn || !hasPendingChanges || !group) return
+    if (!validate()) return
 
-    // If group type changed, we need to include it
-    // But UpdateGroupRequest doesn't include groupType — the server handles it via PATCH
-    // For now, update the attributes that UpdateGroupRequest supports
     if (Object.keys(draft).length > 0) {
       await updateMutation.mutateAsync({ dn, data: draft })
     }
 
-    // Group type changes would require a separate mechanism
-    // For now, scope/category changes are visual only until the server supports groupType updates
     setDraft({})
     setScopeOverride(null)
     setCategoryOverride(null)
@@ -108,6 +118,7 @@ export default function GroupPropertiesDialog({
 
   async function handleOk() {
     if (dn && hasPendingChanges && group) {
+      if (!validate()) return
       if (Object.keys(draft).length > 0) {
         await updateMutation.mutateAsync({ dn, data: draft })
       }
@@ -122,6 +133,7 @@ export default function GroupPropertiesDialog({
     setDraft({})
     setScopeOverride(null)
     setCategoryOverride(null)
+    setValidationError('')
     onOpenChange(false)
   }
 
@@ -137,7 +149,7 @@ export default function GroupPropertiesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[620px] max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-[820px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {group
@@ -204,6 +216,10 @@ export default function GroupPropertiesDialog({
                 </TabsContent>
               </div>
             </Tabs>
+
+            {validationError && (
+              <p className="text-sm text-destructive px-1">{validationError}</p>
+            )}
 
             <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={handleCancel}>

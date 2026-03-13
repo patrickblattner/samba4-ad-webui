@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { UpdateComputerRequest } from '@samba-ad/shared'
+import { validateSamAccountName } from '@samba-ad/shared'
 import { useComputer } from '@/hooks/useComputer'
 import { useUpdateComputer } from '@/hooks/useComputerMutations'
 import {
@@ -34,11 +35,13 @@ export default function ComputerPropertiesDialog({
   const updateMutation = useUpdateComputer()
   const [draft, setDraft] = useState<UpdateComputerRequest>({})
   const [activeTab, setActiveTab] = useState('general')
+  const [validationError, setValidationError] = useState('')
 
   // Reset draft when computer data loads or dialog opens
   useEffect(() => {
     if (computer) {
       setDraft({})
+      setValidationError('')
     }
   }, [computer])
 
@@ -55,14 +58,28 @@ export default function ComputerPropertiesDialog({
 
   const hasPendingChanges = Object.keys(draft).length > 0
 
+  function validate(): boolean {
+    setValidationError('')
+    if (draft.sAMAccountName !== undefined) {
+      const result = validateSamAccountName(draft.sAMAccountName, 'computer')
+      if (!result.valid) {
+        setValidationError(result.error!)
+        return false
+      }
+    }
+    return true
+  }
+
   async function handleApply() {
     if (!dn || !hasPendingChanges) return
+    if (!validate()) return
     await updateMutation.mutateAsync({ dn, data: draft })
     setDraft({})
   }
 
   async function handleOk() {
     if (dn && hasPendingChanges) {
+      if (!validate()) return
       await updateMutation.mutateAsync({ dn, data: draft })
     }
     setDraft({})
@@ -71,12 +88,13 @@ export default function ComputerPropertiesDialog({
 
   function handleCancel() {
     setDraft({})
+    setValidationError('')
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[620px] max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-[820px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {computer
@@ -135,6 +153,10 @@ export default function ComputerPropertiesDialog({
                 </TabsContent>
               </div>
             </Tabs>
+
+            {validationError && (
+              <p className="text-sm text-destructive px-1">{validationError}</p>
+            )}
 
             <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={handleCancel}>

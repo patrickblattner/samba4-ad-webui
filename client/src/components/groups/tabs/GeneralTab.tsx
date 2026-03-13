@@ -45,8 +45,8 @@ export default function GeneralTab({
         <Label htmlFor="group-name">Group name (pre-Windows 2000)</Label>
         <Input
           id="group-name"
-          value={group.sAMAccountName}
-          disabled
+          value={draft.sAMAccountName ?? group.sAMAccountName}
+          onChange={(e) => onChange({ sAMAccountName: e.target.value })}
         />
 
         <Label htmlFor="group-description">Description</Label>

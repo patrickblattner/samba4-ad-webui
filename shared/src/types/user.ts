@@ -67,6 +67,7 @@ export interface CreateUserRequest {
 }
 
 export interface UpdateUserRequest {
+  sAMAccountName?: string
   givenName?: string | null
   sn?: string | null
   initials?: string | null

@@ -19,6 +19,7 @@ export interface CreateGroupRequest {
 }
 
 export interface UpdateGroupRequest {
+  sAMAccountName?: string
   description?: string | null
   mail?: string | null
   info?: string | null

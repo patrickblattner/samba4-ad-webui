@@ -15,8 +15,8 @@ export default function GeneralTab({ computer, draft, onChange }: GeneralTabProp
         <Label htmlFor="computer-name">Computer name (pre-Windows 2000)</Label>
         <Input
           id="computer-name"
-          value={computer.sAMAccountName}
-          disabled
+          value={draft.sAMAccountName ?? computer.sAMAccountName}
+          onChange={(e) => onChange({ sAMAccountName: e.target.value })}
         />
 
         <Label htmlFor="computer-dns">DNS name</Label>

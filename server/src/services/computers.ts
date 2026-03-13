@@ -1,6 +1,6 @@
 import { Attribute, Change } from 'ldapts'
 import type { AdComputer, CreateComputerRequest, UpdateComputerRequest } from '@samba-ad/shared'
-import { UAC_FLAGS } from '@samba-ad/shared'
+import { UAC_FLAGS, validateSamAccountName } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
@@ -61,6 +61,9 @@ export const getComputer = async (credentials: Credentials, dn: string): Promise
  * Sets objectClass hierarchy and WORKSTATION_TRUST_ACCOUNT + ACCOUNTDISABLE.
  */
 export const createComputer = async (credentials: Credentials, request: CreateComputerRequest): Promise<string> => {
+  const samResult = validateSamAccountName(request.sAMAccountName, 'computer')
+  if (!samResult.valid) throw new Error(samResult.error)
+
   const dn = `CN=${request.name},${request.parentDn}`
 
   // Ensure sAMAccountName ends with $
@@ -104,6 +107,11 @@ export const updateComputer = async (
   dn: string,
   changes: UpdateComputerRequest,
 ): Promise<void> => {
+  if (changes.sAMAccountName !== undefined) {
+    const result = validateSamAccountName(changes.sAMAccountName, 'computer')
+    if (!result.valid) throw new Error(result.error)
+  }
+
   const modifications: Change[] = []
 
   for (const [key, value] of Object.entries(changes)) {

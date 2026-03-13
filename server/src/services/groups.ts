@@ -1,5 +1,6 @@
 import { Attribute, Change } from 'ldapts'
 import type { AdGroup, CreateGroupRequest, UpdateGroupRequest } from '@samba-ad/shared'
+import { validateSamAccountName } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
@@ -55,6 +56,9 @@ export const getGroup = async (credentials: Credentials, dn: string): Promise<Ad
  * Create a new group in AD.
  */
 export const createGroup = async (credentials: Credentials, request: CreateGroupRequest): Promise<string> => {
+  const samResult = validateSamAccountName(request.sAMAccountName, 'group')
+  if (!samResult.valid) throw new Error(samResult.error)
+
   const dn = `CN=${request.name},${request.parentDn}`
 
   const attributes: Record<string, string | string[]> = {
@@ -90,6 +94,11 @@ export const updateGroup = async (
   dn: string,
   changes: UpdateGroupRequest,
 ): Promise<void> => {
+  if (changes.sAMAccountName !== undefined) {
+    const result = validateSamAccountName(changes.sAMAccountName, 'group')
+    if (!result.valid) throw new Error(result.error)
+  }
+
   const modifications: Change[] = []
 
   for (const [key, value] of Object.entries(changes)) {

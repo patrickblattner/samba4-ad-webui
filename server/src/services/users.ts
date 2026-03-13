@@ -1,6 +1,6 @@
 import { Attribute, Change } from 'ldapts'
 import type { AdUser, CreateUserRequest, UpdateUserRequest } from '@samba-ad/shared'
-import { UAC_FLAGS } from '@samba-ad/shared'
+import { UAC_FLAGS, validateSamAccountName } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { encodePassword } from '../utils/password.js'
@@ -107,6 +107,9 @@ export const getUser = async (credentials: Credentials, dn: string): Promise<AdU
  * 3. Optionally enable the account
  */
 export const createUser = async (credentials: Credentials, request: CreateUserRequest): Promise<string> => {
+  const samResult = validateSamAccountName(request.sAMAccountName, 'user')
+  if (!samResult.valid) throw new Error(samResult.error)
+
   const cn = request.displayName || request.sAMAccountName
   const dn = `CN=${cn},${request.parentDn}`
 
@@ -172,6 +175,11 @@ export const updateUser = async (
   dn: string,
   changes: UpdateUserRequest,
 ): Promise<void> => {
+  if (changes.sAMAccountName !== undefined) {
+    const result = validateSamAccountName(changes.sAMAccountName, 'user')
+    if (!result.valid) throw new Error(result.error)
+  }
+
   const modifications: Change[] = []
 
   for (const [key, value] of Object.entries(changes)) {

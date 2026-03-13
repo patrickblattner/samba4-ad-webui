@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { GroupScope, GroupCategory } from '@samba-ad/shared'
-import { GROUP_TYPE } from '@samba-ad/shared'
+import { GROUP_TYPE, validateSamAccountName } from '@samba-ad/shared'
 import { useCreateGroup } from '@/hooks/useGroupMutations'
 import { useDirectoryStore } from '@/stores/directoryStore'
 import {
@@ -73,6 +73,11 @@ export default function CreateGroupDialog({ open, onOpenChange }: CreateGroupDia
     }
     if (!samName.trim()) {
       setErrorMsg('Group name (pre-Windows 2000) is required.')
+      return
+    }
+    const samResult = validateSamAccountName(samName, 'group')
+    if (!samResult.valid) {
+      setErrorMsg(samResult.error!)
       return
     }
     if (!selectedNode) {

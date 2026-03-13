@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { validateSamAccountName } from '@samba-ad/shared'
 import { useCreateUser } from '@/hooks/useUserMutations'
 import { useDirectoryStore } from '@/stores/directoryStore'
+import { useConnectionSecurity } from '@/hooks/useConnectionSecurity'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ShieldAlert } from 'lucide-react'
+import ConfirmDialog from '@/components/shared/ConfirmDialog'
 
 interface CreateUserDialogProps {
   open: boolean
@@ -21,6 +24,7 @@ interface CreateUserDialogProps {
 export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const selectedNode = useDirectoryStore((s) => s.selectedNode)
   const createMutation = useCreateUser()
+  const { ldapsConfigured } = useConnectionSecurity()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [fullName, setFullName] = useState('')
@@ -31,6 +35,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
   const [autoFullName, setAutoFullName] = useState(true)
   const [autoSam, setAutoSam] = useState(true)
   const [errorMsg, setErrorMsg] = useState('')
+  const [showInsecureWarning, setShowInsecureWarning] = useState(false)
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -67,30 +72,47 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
     }
   }, [firstName, lastName, autoSam])
 
-  async function handleCreate() {
+  function validateForm(): boolean {
     setErrorMsg('')
-
     if (!samName.trim()) {
       setErrorMsg('User logon name is required.')
-      return
+      return false
+    }
+    const samResult = validateSamAccountName(samName, 'user')
+    if (!samResult.valid) {
+      setErrorMsg(samResult.error!)
+      return false
     }
     if (!logonName.trim()) {
       setErrorMsg('User logon name (UPN) is required.')
-      return
+      return false
     }
     if (!password) {
       setErrorMsg('Password is required.')
-      return
+      return false
     }
     if (password !== confirmPassword) {
       setErrorMsg('Passwords do not match.')
-      return
+      return false
     }
     if (!selectedNode) {
       setErrorMsg('No container selected in the tree.')
+      return false
+    }
+    return true
+  }
+
+  function handleCreate() {
+    if (!validateForm()) return
+    if (!ldapsConfigured) {
+      setShowInsecureWarning(true)
       return
     }
+    doCreate()
+  }
 
+  async function doCreate() {
+    if (!selectedNode) return
     try {
       await createMutation.mutateAsync({
         parentDn: selectedNode,
@@ -109,6 +131,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[450px]">
         <DialogHeader>
@@ -116,6 +139,15 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
+          {!ldapsConfigured && (
+            <div className="flex items-start gap-2 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                LDAP connection is not encrypted (no LDAPS). The password will be transmitted in plain text.
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
             <Label htmlFor="create-firstName">First name</Label>
             <Input
@@ -198,5 +230,17 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ConfirmDialog
+      open={showInsecureWarning}
+      onOpenChange={setShowInsecureWarning}
+      title="Insecure Connection"
+      description="The LDAP connection is not encrypted (no LDAPS configured). The password will be transmitted in plain text over the network. Do you want to proceed anyway?"
+      confirmLabel="Create Anyway"
+      cancelLabel="Cancel"
+      variant="destructive"
+      onConfirm={doCreate}
+    />
+    </>
   )
 }

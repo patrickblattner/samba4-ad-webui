@@ -21,6 +21,7 @@ export interface CreateComputerRequest {
 }
 
 export interface UpdateComputerRequest {
+  sAMAccountName?: string
   description?: string | null
   location?: string | null
   managedBy?: string | null

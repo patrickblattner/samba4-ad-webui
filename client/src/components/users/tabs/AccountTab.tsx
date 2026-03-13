@@ -56,8 +56,12 @@ export default function AccountTab({ user, draft, onChange }: AccountTabProps) {
           onChange={(e) => onChange({ userPrincipalName: e.target.value })}
         />
 
-        <Label>Pre-Windows 2000</Label>
-        <Input value={user.sAMAccountName} readOnly className="bg-muted" />
+        <Label htmlFor="sam">Pre-Windows 2000</Label>
+        <Input
+          id="sam"
+          value={draft.sAMAccountName ?? user.sAMAccountName}
+          onChange={(e) => onChange({ sAMAccountName: e.target.value })}
+        />
       </div>
 
       <div className="mt-2 space-y-2">

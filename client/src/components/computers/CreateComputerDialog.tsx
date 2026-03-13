@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { validateSamAccountName } from '@samba-ad/shared'
 import { useCreateComputer } from '@/hooks/useComputerMutations'
 import { useDirectoryStore } from '@/stores/directoryStore'
 import {
@@ -54,6 +55,11 @@ export default function CreateComputerDialog({ open, onOpenChange }: CreateCompu
     }
     if (!samName.trim()) {
       setErrorMsg('Computer name (pre-Windows 2000) is required.')
+      return
+    }
+    const samResult = validateSamAccountName(samName, 'computer')
+    if (!samResult.valid) {
+      setErrorMsg(samResult.error!)
       return
     }
     if (!selectedNode) {
