@@ -20,6 +20,10 @@ export const config = {
     expiry: process.env.JWT_EXPIRY || '15m',
   },
 
+  cors: {
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  },
+
   crypto: {
     encryptionKey: process.env.CREDENTIAL_ENCRYPTION_KEY || '',
   },

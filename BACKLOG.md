@@ -8,8 +8,8 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### [Security] Kein Rate Limiting auf Login-Endpoint (#11)
-- Brute-Force-Schutz auf POST /api/auth/login
+### [Security] CORS vollständig offen (#12)
+- Origin-Einschränkung konfigurieren
 
 ---
 
@@ -18,9 +18,6 @@ Tasks are ordered by priority within each column.
 ---
 
 ## Backlog
-
-### [Security] CORS vollständig offen (#12)
-- Origin-Einschränkung konfigurieren
 
 ### [Security] JWT Secret unsicherer Default (#13)
 - Startup-Validierung: Server darf mit Default-Secret nicht starten
@@ -65,6 +62,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#11 [Security] Rate Limiting Login](https://github.com/patrickblattner/samba4-ad-webui/issues/11)
 - [#10 [Security] HTTP Security Headers](https://github.com/patrickblattner/samba4-ad-webui/issues/10)
 - [#22 [QA] React Error Boundary](https://github.com/patrickblattner/samba4-ad-webui/issues/22)
 - [#21 [QA] API Client crasht bei HTTP 204](https://github.com/patrickblattner/samba4-ad-webui/issues/21)
