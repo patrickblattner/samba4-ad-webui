@@ -2,6 +2,7 @@ import { Attribute, Change } from 'ldapts'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { type Credentials } from '../utils/ldapHelpers.js'
+import { escapeDnValue, getParentDn } from '../utils/dnUtils.js'
 
 /**
  * Create an Organizational Unit.
@@ -13,7 +14,7 @@ export const createOu = async (
   parentDn: string,
   description?: string,
 ): Promise<string> => {
-  const dn = `OU=${name},${parentDn}`
+  const dn = `OU=${escapeDnValue(name)},${parentDn}`
 
   const attributes: Record<string, string | string[]> = {
     objectClass: ['top', 'organizationalUnit'],
@@ -133,10 +134,8 @@ export const renameOu = async (
   dn: string,
   newName: string,
 ): Promise<string> => {
-  const newRdn = `OU=${newName}`
-  // Extract parent DN
-  const commaIndex = dn.indexOf(',')
-  const parentDn = commaIndex !== -1 ? dn.substring(commaIndex + 1) : dn
+  const newRdn = `OU=${escapeDnValue(newName)}`
+  const parentDn = getParentDn(dn)
   const newDn = `${newRdn},${parentDn}`
 
   const client = await createBoundClient(config.ldap.url, credentials.dn, credentials.password)

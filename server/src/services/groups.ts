@@ -3,7 +3,7 @@ import type { AdGroup, CreateGroupRequest, UpdateGroupRequest } from '@samba-ad/
 import { validateSamAccountName } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
-import { extractCn } from '../utils/dnUtils.js'
+import { extractCn, escapeDnValue } from '../utils/dnUtils.js'
 import { type Credentials, str, strArr, num, ALLOWED_GROUP_ATTRS } from '../utils/ldapHelpers.js'
 
 /**
@@ -59,7 +59,7 @@ export const createGroup = async (credentials: Credentials, request: CreateGroup
   const samResult = validateSamAccountName(request.sAMAccountName, 'group')
   if (!samResult.valid) throw new Error(samResult.error)
 
-  const dn = `CN=${request.name},${request.parentDn}`
+  const dn = `CN=${escapeDnValue(request.name)},${request.parentDn}`
 
   const attributes: Record<string, string | string[]> = {
     objectClass: ['top', 'group'],
@@ -236,7 +236,7 @@ export const moveGroup = async (
   targetOu: string,
 ): Promise<string> => {
   const cn = extractCn(dn)
-  const newRdn = `CN=${cn}`
+  const newRdn = `CN=${escapeDnValue(cn)}`
   const newDn = `${newRdn},${targetOu}`
 
   const client = await createBoundClient(config.ldap.url, credentials.dn, credentials.password)

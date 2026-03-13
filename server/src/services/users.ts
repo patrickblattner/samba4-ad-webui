@@ -5,7 +5,7 @@ import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { encodePassword } from '../utils/password.js'
 import { hasFlag, setFlag, clearFlag } from '../utils/uac.js'
-import { extractCn } from '../utils/dnUtils.js'
+import { extractCn, escapeDnValue } from '../utils/dnUtils.js'
 import { type Credentials, str, strArr, num, ALLOWED_USER_ATTRS } from '../utils/ldapHelpers.js'
 
 /**
@@ -111,7 +111,7 @@ export const createUser = async (credentials: Credentials, request: CreateUserRe
   if (!samResult.valid) throw new Error(samResult.error)
 
   const cn = request.displayName || request.sAMAccountName
-  const dn = `CN=${cn},${request.parentDn}`
+  const dn = `CN=${escapeDnValue(cn)},${request.parentDn}`
 
   // Build attributes for the new user entry
   const attributes: Record<string, string | string[]> = {
@@ -338,7 +338,7 @@ export const moveUser = async (
   targetOu: string,
 ): Promise<string> => {
   const cn = extractCn(dn)
-  const newRdn = `CN=${cn}`
+  const newRdn = `CN=${escapeDnValue(cn)}`
   const newDn = `${newRdn},${targetOu}`
 
   const client = await createBoundClient(config.ldap.url, credentials.dn, credentials.password)
