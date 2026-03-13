@@ -10,9 +10,9 @@
 - **Status field ID:** `PVTSSF_lAHOAKkNyM4BRpbjzg_ah7w`
 - **Status option IDs:**
   - Backlog: `8facc7d6`
-  - Todo: `f75ad846`
-  - In Progress: `47fc9ee4`
-  - Done: `98236657`
+  - Todo: `00a5db87`
+  - In Progress: `9bb96b95`
+  - Done: `e2f67afd`
 
 ## Local Files
 - **Backlog file:** `BACKLOG.md`
