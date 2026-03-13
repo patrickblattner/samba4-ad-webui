@@ -84,7 +84,11 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
   const filteredAttributes = useMemo(() => {
     if (!filter) return attributes
     const lower = filter.toLowerCase()
-    return attributes.filter((a) => a.name.toLowerCase().includes(lower))
+    return attributes.filter((a) => {
+      if (a.name.toLowerCase().includes(lower)) return true
+      if (a.values.length === 0 && '<not set>'.includes(lower)) return true
+      return false
+    })
   }, [attributes, filter])
 
   // Reset selection when attributes change
@@ -121,14 +125,23 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
       const changes: AttributeChange[] = []
 
       if (newValues.length === 0) {
-        // Delete the attribute
+        // Delete the attribute (only if it was previously set)
+        if (selectedAttr.values.length > 0) {
+          changes.push({
+            name: selectedAttr.name,
+            operation: 'delete',
+            values: [],
+          })
+        }
+      } else if (selectedAttr.values.length === 0) {
+        // Adding a previously unset attribute
         changes.push({
           name: selectedAttr.name,
-          operation: 'delete',
-          values: [],
+          operation: 'add',
+          values: newValues,
         })
       } else {
-        // Replace the attribute
+        // Replace existing attribute
         changes.push({
           name: selectedAttr.name,
           operation: 'replace',
@@ -187,7 +200,8 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
           </TableHeader>
           <TableBody>
             {filteredAttributes.map((attr) => {
-              const displayValue = attr.values.join('; ')
+              const isNotSet = attr.values.length === 0
+              const displayValue = isNotSet ? '<not set>' : attr.values.join('; ')
               return (
                 <TableRow
                   key={attr.name}
@@ -204,7 +218,7 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
                   <TableCell className="py-1 font-mono text-xs">
                     {attr.name}
                   </TableCell>
-                  <TableCell className="py-1 text-xs truncate max-w-[300px]">
+                  <TableCell className={cn("py-1 text-xs truncate max-w-[300px]", isNotSet && "text-muted-foreground italic")}>
                     {displayValue}
                   </TableCell>
                 </TableRow>
