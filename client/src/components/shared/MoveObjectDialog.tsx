@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronRight, FolderOpen, Folder, Database, Box, Loader2 } from 'lucide-react'
+import { ChevronRight, FolderOpen, Folder, Database, Loader2 } from 'lucide-react'
 import type { TreeNode } from '@samba-ad/shared'
 import { useTreeRoot, useTreeChildren } from '@/hooks/useTreeData'
 import {
@@ -29,12 +29,11 @@ function NodeIcon({ type, isExpanded }: { type: TreeNode['type']; isExpanded: bo
     case 'domain':
       return <Database className={cn(className, 'text-blue-600')} />
     case 'ou':
+    case 'container':
+    case 'builtinDomain':
       return isExpanded
         ? <FolderOpen className={cn(className, 'text-amber-600')} />
         : <Folder className={cn(className, 'text-amber-600')} />
-    case 'container':
-    case 'builtinDomain':
-      return <Box className={cn(className, 'text-slate-500')} />
     default:
       return <Folder className={className} />
   }
