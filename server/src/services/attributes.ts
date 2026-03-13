@@ -77,6 +77,8 @@ export const getAttributes = async (
 
     for (const [name, value] of Object.entries(entry)) {
       if (name === 'dn' || name === 'controls') continue
+      // Filter out LDAP request selectors that ldapts returns as properties
+      if (name === '*' || name === '+') continue
       const values = toStringValues(name, value)
       attributes.push({ name, values })
     }
