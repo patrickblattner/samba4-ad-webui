@@ -105,76 +105,78 @@ export default function CreateGroupDialog({ open, onOpenChange }: CreateGroupDia
           <DialogTitle>New Group</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
-            <Label htmlFor="create-group-name">Group name</Label>
-            <Input
-              id="create-group-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+        <form onSubmit={(e) => { e.preventDefault(); handleCreate() }}>
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
+              <Label htmlFor="create-group-name">Group name</Label>
+              <Input
+                id="create-group-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
 
-            <Label htmlFor="create-group-sam">Pre-Windows 2000</Label>
-            <Input
-              id="create-group-sam"
-              value={samName}
-              onChange={(e) => {
-                setAutoSam(false)
-                setSamName(e.target.value)
-              }}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 mt-2">
-            <div>
-              <Label className="mb-2 block">Group scope</Label>
-              <RadioGroup value={scope} onValueChange={(v) => setScope(v as GroupScope)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="domainLocal" id="create-scope-domainLocal" />
-                  <Label htmlFor="create-scope-domainLocal" className="font-normal">Domain local</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="global" id="create-scope-global" />
-                  <Label htmlFor="create-scope-global" className="font-normal">Global</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="universal" id="create-scope-universal" />
-                  <Label htmlFor="create-scope-universal" className="font-normal">Universal</Label>
-                </div>
-              </RadioGroup>
+              <Label htmlFor="create-group-sam">Pre-Windows 2000</Label>
+              <Input
+                id="create-group-sam"
+                value={samName}
+                onChange={(e) => {
+                  setAutoSam(false)
+                  setSamName(e.target.value)
+                }}
+              />
             </div>
 
-            <div>
-              <Label className="mb-2 block">Group type</Label>
-              <RadioGroup value={category} onValueChange={(v) => setCategory(v as GroupCategory)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="security" id="create-type-security" />
-                  <Label htmlFor="create-type-security" className="font-normal">Security</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="distribution" id="create-type-distribution" />
-                  <Label htmlFor="create-type-distribution" className="font-normal">Distribution</Label>
-                </div>
-              </RadioGroup>
+            <div className="grid grid-cols-2 gap-6 mt-2">
+              <div>
+                <Label className="mb-2 block">Group scope</Label>
+                <RadioGroup value={scope} onValueChange={(v) => setScope(v as GroupScope)}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="domainLocal" id="create-scope-domainLocal" />
+                    <Label htmlFor="create-scope-domainLocal" className="font-normal">Domain local</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="global" id="create-scope-global" />
+                    <Label htmlFor="create-scope-global" className="font-normal">Global</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="universal" id="create-scope-universal" />
+                    <Label htmlFor="create-scope-universal" className="font-normal">Universal</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div>
+                <Label className="mb-2 block">Group type</Label>
+                <RadioGroup value={category} onValueChange={(v) => setCategory(v as GroupCategory)}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="security" id="create-type-security" />
+                    <Label htmlFor="create-type-security" className="font-normal">Security</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="distribution" id="create-type-distribution" />
+                    <Label htmlFor="create-type-distribution" className="font-normal">Distribution</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
-          </div>
 
-          {errorMsg && (
-            <p className="text-sm text-destructive">{errorMsg}</p>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} disabled={createMutation.isPending}>
-            {createMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {errorMsg && (
+              <p className="text-sm text-destructive">{errorMsg}</p>
             )}
-            Create
-          </Button>
-        </DialogFooter>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Create
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

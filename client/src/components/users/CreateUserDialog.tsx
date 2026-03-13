@@ -138,96 +138,98 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
           <DialogTitle>New User</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          {!ldapsConfigured && (
-            <div className="flex items-start gap-2 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
-              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                LDAP connection is not encrypted (no LDAPS). The password will be transmitted in plain text.
-              </span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
-            <Label htmlFor="create-firstName">First name</Label>
-            <Input
-              id="create-firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-
-            <Label htmlFor="create-lastName">Last name</Label>
-            <Input
-              id="create-lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-
-            <Label htmlFor="create-fullName">Full name</Label>
-            <Input
-              id="create-fullName"
-              value={fullName}
-              onChange={(e) => {
-                setAutoFullName(false)
-                setFullName(e.target.value)
-              }}
-            />
-
-            <Label htmlFor="create-upn">User logon name</Label>
-            <Input
-              id="create-upn"
-              placeholder="user@domain"
-              value={logonName}
-              onChange={(e) => setLogonName(e.target.value)}
-            />
-
-            <Label htmlFor="create-sam">Pre-Windows 2000</Label>
-            <Input
-              id="create-sam"
-              value={samName}
-              onChange={(e) => {
-                setAutoSam(false)
-                setSamName(e.target.value)
-              }}
-            />
-          </div>
-
-          <div className="border-t pt-4 mt-2">
-            <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
-              <Label htmlFor="create-password">Password</Label>
-              <Input
-                id="create-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <Label htmlFor="create-confirm">Confirm password</Label>
-              <Input
-                id="create-confirm"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {errorMsg && (
-            <p className="text-sm text-destructive">{errorMsg}</p>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} disabled={createMutation.isPending}>
-            {createMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <form onSubmit={(e) => { e.preventDefault(); handleCreate() }}>
+          <div className="grid gap-4 py-2">
+            {!ldapsConfigured && (
+              <div className="flex items-start gap-2 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  LDAP connection is not encrypted (no LDAPS). The password will be transmitted in plain text.
+                </span>
+              </div>
             )}
-            Create
-          </Button>
-        </DialogFooter>
+
+            <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
+              <Label htmlFor="create-firstName">First name</Label>
+              <Input
+                id="create-firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+
+              <Label htmlFor="create-lastName">Last name</Label>
+              <Input
+                id="create-lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+
+              <Label htmlFor="create-fullName">Full name</Label>
+              <Input
+                id="create-fullName"
+                value={fullName}
+                onChange={(e) => {
+                  setAutoFullName(false)
+                  setFullName(e.target.value)
+                }}
+              />
+
+              <Label htmlFor="create-upn">User logon name</Label>
+              <Input
+                id="create-upn"
+                placeholder="user@domain"
+                value={logonName}
+                onChange={(e) => setLogonName(e.target.value)}
+              />
+
+              <Label htmlFor="create-sam">Pre-Windows 2000</Label>
+              <Input
+                id="create-sam"
+                value={samName}
+                onChange={(e) => {
+                  setAutoSam(false)
+                  setSamName(e.target.value)
+                }}
+              />
+            </div>
+
+            <div className="border-t pt-4 mt-2">
+              <div className="grid grid-cols-[140px_1fr] items-center gap-x-4 gap-y-3">
+                <Label htmlFor="create-password">Password</Label>
+                <Input
+                  id="create-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+
+                <Label htmlFor="create-confirm">Confirm password</Label>
+                <Input
+                  id="create-confirm"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {errorMsg && (
+              <p className="text-sm text-destructive">{errorMsg}</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Create
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
 

@@ -66,44 +66,46 @@ export default function CreateOuDialog({ open, onOpenChange }: CreateOuDialogPro
           <DialogTitle>New Organizational Unit</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid grid-cols-[120px_1fr] items-center gap-x-4 gap-y-3">
-            <Label htmlFor="create-ou-name">Name</Label>
-            <Input
-              id="create-ou-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-            />
+        <form onSubmit={(e) => { e.preventDefault(); handleCreate() }}>
+          <div className="grid gap-4 py-2">
+            <div className="grid grid-cols-[120px_1fr] items-center gap-x-4 gap-y-3">
+              <Label htmlFor="create-ou-name">Name</Label>
+              <Input
+                id="create-ou-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
 
-            <Label htmlFor="create-ou-desc">Description</Label>
-            <Input
-              id="create-ou-desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              <Label htmlFor="create-ou-desc">Description</Label>
+              <Input
+                id="create-ou-desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Container: {selectedNode ?? '(none selected)'}
+            </p>
+
+            {errorMsg && (
+              <p className="text-sm text-destructive">{errorMsg}</p>
+            )}
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Container: {selectedNode ?? '(none selected)'}
-          </p>
-
-          {errorMsg && (
-            <p className="text-sm text-destructive">{errorMsg}</p>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreate} disabled={createMutation.isPending}>
-            {createMutation.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Create
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Create
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
