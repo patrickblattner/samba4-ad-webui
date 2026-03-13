@@ -6,7 +6,7 @@ import { config } from '../config.js'
 import { encodePassword } from '../utils/password.js'
 import { hasFlag, setFlag, clearFlag } from '../utils/uac.js'
 import { extractCn } from '../utils/dnUtils.js'
-import { type Credentials, str, strArr, num } from '../utils/ldapHelpers.js'
+import { type Credentials, str, strArr, num, ALLOWED_USER_ATTRS } from '../utils/ldapHelpers.js'
 
 /**
  * Map an LDAP entry to an AdUser object.
@@ -176,6 +176,7 @@ export const updateUser = async (
 
   for (const [key, value] of Object.entries(changes)) {
     if (value === undefined) continue
+    if (!ALLOWED_USER_ATTRS.has(key)) continue
 
     if (value === null) {
       // Delete the attribute

@@ -4,7 +4,7 @@ import { UAC_FLAGS } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
-import { type Credentials, str, strArr, num } from '../utils/ldapHelpers.js'
+import { type Credentials, str, strArr, num, ALLOWED_COMPUTER_ATTRS } from '../utils/ldapHelpers.js'
 
 /**
  * Map an LDAP entry to an AdComputer object.
@@ -108,6 +108,7 @@ export const updateComputer = async (
 
   for (const [key, value] of Object.entries(changes)) {
     if (value === undefined) continue
+    if (!ALLOWED_COMPUTER_ATTRS.has(key)) continue
 
     if (value === null) {
       modifications.push(new Change({

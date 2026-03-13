@@ -3,7 +3,7 @@ import type { AdGroup, CreateGroupRequest, UpdateGroupRequest } from '@samba-ad/
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
-import { type Credentials, str, strArr, num } from '../utils/ldapHelpers.js'
+import { type Credentials, str, strArr, num, ALLOWED_GROUP_ATTRS } from '../utils/ldapHelpers.js'
 
 /**
  * Map an LDAP entry to an AdGroup object.
@@ -94,6 +94,7 @@ export const updateGroup = async (
 
   for (const [key, value] of Object.entries(changes)) {
     if (value === undefined) continue
+    if (!ALLOWED_GROUP_ATTRS.has(key)) continue
 
     if (value === null) {
       modifications.push(new Change({

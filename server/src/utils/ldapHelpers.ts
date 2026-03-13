@@ -65,3 +65,28 @@ export const isAccountEnabled = (uac: unknown): boolean => {
   if (isNaN(value)) return true
   return (value & UAC_ACCOUNTDISABLE) === 0
 }
+
+/**
+ * Allowlists of attributes that may be modified via update operations.
+ * Attributes not on this list are silently dropped.
+ */
+export const ALLOWED_USER_ATTRS = new Set([
+  'givenName', 'sn', 'displayName', 'description', 'mail', 'telephoneNumber',
+  'mobile', 'facsimileTelephoneNumber', 'title', 'department', 'company',
+  'physicalDeliveryOfficeName', 'streetAddress', 'l', 'st', 'postalCode', 'co',
+  'c', 'wWWHomePage', 'userPrincipalName', 'sAMAccountName', 'initials',
+  'homePhone', 'pager', 'ipPhone', 'info', 'manager', 'employeeID',
+  'employeeNumber', 'userAccountControl', 'accountExpires', 'profilePath',
+  'scriptPath', 'homeDirectory', 'homeDrive',
+])
+
+export const ALLOWED_GROUP_ATTRS = new Set([
+  'description', 'mail', 'info', 'sAMAccountName', 'groupType',
+  'managedBy', 'displayName',
+])
+
+export const ALLOWED_COMPUTER_ATTRS = new Set([
+  'description', 'location', 'managedBy', 'operatingSystem',
+  'operatingSystemVersion', 'operatingSystemServicePack',
+  'sAMAccountName', 'userAccountControl', 'dNSHostName',
+])
