@@ -3,34 +3,12 @@ import type { AdGroup, CreateGroupRequest, UpdateGroupRequest } from '@samba-ad/
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
-
-interface Credentials {
-  dn: string
-  password: string
-}
+import { type Credentials, str, strArr, num } from '../utils/ldapHelpers.js'
 
 /**
  * Map an LDAP entry to an AdGroup object.
  */
 const entryToAdGroup = (entry: Record<string, unknown>): AdGroup => {
-  const str = (v: unknown): string | undefined => {
-    if (v === undefined || v === null) return undefined
-    if (Array.isArray(v)) return v[0]?.toString()
-    return v.toString()
-  }
-
-  const strArr = (v: unknown): string[] | undefined => {
-    if (v === undefined || v === null) return undefined
-    if (Array.isArray(v)) return v.map(x => x.toString())
-    return [v.toString()]
-  }
-
-  const num = (v: unknown): number | undefined => {
-    if (v === undefined || v === null) return undefined
-    const n = Number(Array.isArray(v) ? v[0] : v)
-    return isNaN(n) ? undefined : n
-  }
-
   return {
     dn: str(entry.dn) || '',
     sAMAccountName: str(entry.sAMAccountName) || '',

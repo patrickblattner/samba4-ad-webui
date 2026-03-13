@@ -1,45 +1,9 @@
 import type { ObjectSummary, PaginatedResponse } from '@samba-ad/shared'
-import { UAC_FLAGS } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
 import { objectListFilter } from '../utils/ldapFilters.js'
-
-interface Credentials {
-  dn: string
-  password: string
-}
-
-/**
- * Normalize an ldapts attribute value to a string array.
- */
-const toStringArray = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value.map(String)
-  if (typeof value === 'string') return [value]
-  if (value instanceof Buffer) return [value.toString()]
-  return []
-}
-
-/**
- * Determine object type from objectClass array.
- */
-const determineObjectType = (objectClass: string[]): ObjectSummary['type'] => {
-  const classes = objectClass.map(c => c.toLowerCase())
-  if (classes.includes('computer')) return 'computer'
-  if (classes.includes('group')) return 'group'
-  if (classes.includes('person') && classes.includes('user')) return 'user'
-  if (classes.includes('contact')) return 'contact'
-  return 'unknown'
-}
-
-/**
- * Check if a user account is enabled based on userAccountControl flags.
- */
-const isAccountEnabled = (uac: unknown): boolean => {
-  const value = typeof uac === 'string' ? parseInt(uac, 10) : (uac as number)
-  if (isNaN(value)) return true
-  return (value & UAC_FLAGS.ACCOUNTDISABLE) === 0
-}
+import { type Credentials, toStringArray, determineObjectType, isAccountEnabled } from '../utils/ldapHelpers.js'
 
 /**
  * List AD objects in a container with pagination.

@@ -3,11 +3,7 @@ import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn } from '../utils/dnUtils.js'
 import { treeChildrenFilter } from '../utils/ldapFilters.js'
-
-interface Credentials {
-  dn: string
-  password: string
-}
+import { type Credentials, toStringArray } from '../utils/ldapHelpers.js'
 
 /**
  * Determine TreeNode type from objectClass array.
@@ -18,16 +14,6 @@ const determineNodeType = (objectClass: string[]): TreeNode['type'] => {
   if (classes.includes('builtindomain')) return 'builtinDomain'
   if (classes.includes('container')) return 'container'
   return 'container'
-}
-
-/**
- * Normalize an ldapts attribute value to a string array.
- */
-const toStringArray = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value.map(String)
-  if (typeof value === 'string') return [value]
-  if (value instanceof Buffer) return [value.toString()]
-  return []
 }
 
 /**

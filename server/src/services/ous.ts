@@ -1,11 +1,7 @@
 import { Attribute, Change } from 'ldapts'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
-
-interface Credentials {
-  dn: string
-  password: string
-}
+import { type Credentials } from '../utils/ldapHelpers.js'
 
 /**
  * Create an Organizational Unit.

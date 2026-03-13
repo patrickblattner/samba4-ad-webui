@@ -2,11 +2,7 @@ import { Attribute, Change } from 'ldapts'
 import type { LdapAttribute, AttributeChange } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
-
-interface Credentials {
-  dn: string
-  password: string
-}
+import { type Credentials } from '../utils/ldapHelpers.js'
 
 /** Attributes that contain binary data and should not be returned as strings */
 const BINARY_ATTRIBUTES = new Set([

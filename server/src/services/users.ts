@@ -6,35 +6,13 @@ import { config } from '../config.js'
 import { encodePassword } from '../utils/password.js'
 import { hasFlag, setFlag, clearFlag } from '../utils/uac.js'
 import { extractCn } from '../utils/dnUtils.js'
-
-interface Credentials {
-  dn: string
-  password: string
-}
+import { type Credentials, str, strArr, num } from '../utils/ldapHelpers.js'
 
 /**
  * Map an LDAP entry to an AdUser object.
  * Handles both string and string[] values from ldapts.
  */
 const entryToAdUser = (entry: Record<string, unknown>): AdUser => {
-  const str = (v: unknown): string | undefined => {
-    if (v === undefined || v === null) return undefined
-    if (Array.isArray(v)) return v[0]?.toString()
-    return v.toString()
-  }
-
-  const strArr = (v: unknown): string[] | undefined => {
-    if (v === undefined || v === null) return undefined
-    if (Array.isArray(v)) return v.map(x => x.toString())
-    return [v.toString()]
-  }
-
-  const num = (v: unknown): number | undefined => {
-    if (v === undefined || v === null) return undefined
-    const n = Number(Array.isArray(v) ? v[0] : v)
-    return isNaN(n) ? undefined : n
-  }
-
   return {
     dn: str(entry.dn) || '',
     sAMAccountName: str(entry.sAMAccountName) || '',

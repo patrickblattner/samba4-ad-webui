@@ -21,8 +21,6 @@ Tasks are ordered by priority within each column.
 ### [QA] Pagination holt alle Objekte (#26)
 - Server-side Pagination via LDAP paging statt in-memory slice
 
-### [QA] Duplicate Helper Functions (#27)
-- toStringArray, determineObjectType etc. zentralisieren
 
 ### [QA] Attribute Keys ohne Allowlist (#28)
 - Update-Operationen sollen nur erlaubte Attribute akzeptieren
@@ -35,6 +33,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#30 [QA] OU Delete Sort Bug](https://github.com/patrickblattner/samba4-ad-webui/issues/30)
 - [#23 [QA] Input Schema-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/23)
 - [#17 [Security] Schema-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/17)
 - [#16 [Security] Token Refresh LDAP-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/16)
