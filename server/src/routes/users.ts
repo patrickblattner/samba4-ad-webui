@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
-import { createUserSchema, passwordResetSchema, moveSchema } from '../schemas.js'
+import { createUserSchema, updateUserSchema, passwordResetSchema, moveSchema } from '../schemas.js'
 import {
   getUser,
   createUser,
@@ -57,7 +57,7 @@ router.post('/', requireAuth, validateBody(createUserSchema), async (req, res, n
  * PATCH /api/users?dn=<dn>
  * Update user attributes.
  */
-router.patch('/', requireAuth, async (req, res, next) => {
+router.patch('/', requireAuth, validateBody(updateUserSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string

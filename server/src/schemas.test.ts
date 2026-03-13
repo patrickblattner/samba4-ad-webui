@@ -3,12 +3,16 @@ import {
   loginSchema,
   refreshSchema,
   createUserSchema,
+  updateUserSchema,
   passwordResetSchema,
   moveSchema,
   createGroupSchema,
+  updateGroupSchema,
   membersSchema,
   createComputerSchema,
+  updateComputerSchema,
   createOuSchema,
+  updateOuSchema,
   renameOuSchema,
   updateAttributesSchema,
 } from './schemas'
@@ -324,6 +328,205 @@ describe('renameOuSchema', () => {
 
   it('rejects newName exceeding max length', () => {
     const result = renameOuSchema.safeParse({ newName: 'a'.repeat(257) })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('createUserSchema catchall', () => {
+  const validPayload = {
+    parentDn: 'OU=Users,DC=example,DC=com',
+    sAMAccountName: 'jdoe',
+    userPrincipalName: 'jdoe@example.com',
+    password: 'P@ssw0rd',
+  }
+
+  it('allows extra string attributes within 65536 chars', () => {
+    const result = createUserSchema.safeParse({
+      ...validPayload,
+      customAttr: 'a'.repeat(65536),
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects extra attributes exceeding 65536 chars', () => {
+    const result = createUserSchema.safeParse({
+      ...validPayload,
+      customAttr: 'a'.repeat(65537),
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects extra attributes that are not strings', () => {
+    const result = createUserSchema.safeParse({
+      ...validPayload,
+      customAttr: 12345,
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('createGroupSchema catchall', () => {
+  const validPayload = {
+    parentDn: 'OU=Groups,DC=example,DC=com',
+    name: 'TestGroup',
+    sAMAccountName: 'TestGroup',
+    groupType: -2147483646,
+  }
+
+  it('allows extra string attributes within 65536 chars', () => {
+    const result = createGroupSchema.safeParse({
+      ...validPayload,
+      customAttr: 'a'.repeat(65536),
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects extra attributes exceeding 65536 chars', () => {
+    const result = createGroupSchema.safeParse({
+      ...validPayload,
+      customAttr: 'a'.repeat(65537),
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('createComputerSchema catchall', () => {
+  const validPayload = {
+    parentDn: 'OU=Computers,DC=example,DC=com',
+    name: 'WORKSTATION1',
+    sAMAccountName: 'WORKSTATION1$',
+  }
+
+  it('allows extra string attributes within 65536 chars', () => {
+    const result = createComputerSchema.safeParse({
+      ...validPayload,
+      customAttr: 'a'.repeat(65536),
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects extra attributes exceeding 65536 chars', () => {
+    const result = createComputerSchema.safeParse({
+      ...validPayload,
+      customAttr: 'a'.repeat(65537),
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('updateUserSchema', () => {
+  it('accepts valid partial update', () => {
+    const result = updateUserSchema.safeParse({
+      givenName: 'John',
+      title: 'Manager',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts null values for attribute deletion', () => {
+    const result = updateUserSchema.safeParse({
+      givenName: null,
+      title: null,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts empty body', () => {
+    const result = updateUserSchema.safeParse({})
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects unknown fields', () => {
+    const result = updateUserSchema.safeParse({
+      givenName: 'John',
+      objectClass: 'hacked',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects sAMAccountName exceeding 20 characters', () => {
+    const result = updateUserSchema.safeParse({
+      sAMAccountName: 'a'.repeat(21),
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('updateGroupSchema', () => {
+  it('accepts valid partial update', () => {
+    const result = updateGroupSchema.safeParse({
+      description: 'Updated description',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts null values for attribute deletion', () => {
+    const result = updateGroupSchema.safeParse({
+      description: null,
+      mail: null,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects unknown fields', () => {
+    const result = updateGroupSchema.safeParse({
+      description: 'Valid',
+      objectClass: 'hacked',
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('updateComputerSchema', () => {
+  it('accepts valid partial update', () => {
+    const result = updateComputerSchema.safeParse({
+      description: 'Updated description',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts null values for attribute deletion', () => {
+    const result = updateComputerSchema.safeParse({
+      description: null,
+      location: null,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects unknown fields', () => {
+    const result = updateComputerSchema.safeParse({
+      description: 'Valid',
+      objectClass: 'hacked',
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('updateOuSchema', () => {
+  it('accepts valid update', () => {
+    const result = updateOuSchema.safeParse({
+      description: 'Updated description',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts empty body', () => {
+    const result = updateOuSchema.safeParse({})
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects description exceeding max length', () => {
+    const result = updateOuSchema.safeParse({
+      description: 'a'.repeat(1025),
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects unknown fields', () => {
+    const result = updateOuSchema.safeParse({
+      description: 'Valid',
+      objectClass: 'hacked',
+    })
     expect(result.success).toBe(false)
   })
 })

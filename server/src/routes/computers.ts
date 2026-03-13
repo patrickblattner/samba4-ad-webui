@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
-import { createComputerSchema, moveSchema } from '../schemas.js'
+import { createComputerSchema, updateComputerSchema, moveSchema } from '../schemas.js'
 import {
   getComputer,
   createComputer,
@@ -54,7 +54,7 @@ router.post('/', requireAuth, validateBody(createComputerSchema), async (req, re
  * PATCH /api/computers?dn=<dn>
  * Update computer attributes.
  */
-router.patch('/', requireAuth, async (req, res, next) => {
+router.patch('/', requireAuth, validateBody(updateComputerSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string

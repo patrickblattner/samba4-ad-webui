@@ -20,7 +20,7 @@ export const createUserSchema = z.object({
   givenName: z.string().max(256, 'givenName must be at most 256 characters').optional(),
   sn: z.string().max(256, 'sn must be at most 256 characters').optional(),
   description: z.string().max(1024, 'description must be at most 1024 characters').optional(),
-}).passthrough()
+}).catchall(z.string().max(65536))
 
 export const passwordResetSchema = z.object({
   newPassword: z.string().min(1, 'newPassword is required').max(256, 'newPassword must be at most 256 characters'),
@@ -37,7 +37,7 @@ export const createGroupSchema = z.object({
   sAMAccountName: z.string().min(1).max(256, 'sAMAccountName must be at most 256 characters'),
   groupType: z.number(),
   description: z.string().max(1024, 'description must be at most 1024 characters').optional(),
-}).passthrough()
+}).catchall(z.string().max(65536))
 
 export const membersSchema = z.object({
   members: z.array(z.string().min(1).max(2048, 'member DN must be at most 2048 characters')).min(1, 'members must be a non-empty array'),
@@ -49,7 +49,7 @@ export const createComputerSchema = z.object({
   name: z.string().min(1).max(256, 'name must be at most 256 characters'),
   sAMAccountName: z.string().min(1).max(256, 'sAMAccountName must be at most 256 characters'),
   description: z.string().max(1024, 'description must be at most 1024 characters').optional(),
-}).passthrough()
+}).catchall(z.string().max(65536))
 
 // OUs
 export const createOuSchema = z.object({
@@ -61,6 +61,74 @@ export const createOuSchema = z.object({
 export const renameOuSchema = z.object({
   newName: z.string().min(1, 'newName is required').max(256, 'newName must be at most 256 characters'),
 })
+
+// Update schemas for PATCH endpoints
+const nullableString = z.string().max(65536).nullable().optional()
+const nullableStringArray = z.array(z.string().max(65536)).nullable().optional()
+
+export const updateUserSchema = z.object({
+  sAMAccountName: z.string().min(1).max(20).optional(),
+  givenName: nullableString,
+  sn: nullableString,
+  initials: nullableString,
+  displayName: nullableString,
+  description: nullableString,
+  physicalDeliveryOfficeName: nullableString,
+  telephoneNumber: nullableString,
+  otherTelephone: nullableStringArray,
+  mail: nullableString,
+  wWWHomePage: nullableString,
+  url: nullableStringArray,
+  streetAddress: nullableString,
+  postOfficeBox: nullableString,
+  l: nullableString,
+  st: nullableString,
+  postalCode: nullableString,
+  c: nullableString,
+  co: nullableString,
+  countryCode: z.number().nullable().optional(),
+  userPrincipalName: z.string().max(1024).optional(),
+  userAccountControl: z.number().optional(),
+  accountExpires: nullableString,
+  profilePath: nullableString,
+  scriptPath: nullableString,
+  homeDrive: nullableString,
+  homeDirectory: nullableString,
+  homePhone: nullableString,
+  otherHomePhone: nullableStringArray,
+  pager: nullableString,
+  otherPager: nullableStringArray,
+  mobile: nullableString,
+  otherMobile: nullableStringArray,
+  facsimileTelephoneNumber: nullableString,
+  otherFacsimileTelephoneNumber: nullableStringArray,
+  ipPhone: nullableString,
+  otherIpPhone: nullableStringArray,
+  info: nullableString,
+  title: nullableString,
+  department: nullableString,
+  company: nullableString,
+  manager: nullableString,
+}).strict()
+
+export const updateGroupSchema = z.object({
+  sAMAccountName: z.string().min(1).max(256).optional(),
+  description: nullableString,
+  mail: nullableString,
+  info: nullableString,
+  managedBy: nullableString,
+}).strict()
+
+export const updateComputerSchema = z.object({
+  sAMAccountName: z.string().min(1).max(256).optional(),
+  description: nullableString,
+  location: nullableString,
+  managedBy: nullableString,
+}).strict()
+
+export const updateOuSchema = z.object({
+  description: z.string().max(1024, 'description must be at most 1024 characters').optional(),
+}).strict()
 
 // Attributes
 export const updateAttributesSchema = z.object({

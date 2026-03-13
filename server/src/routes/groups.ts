@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
-import { createGroupSchema, membersSchema, moveSchema } from '../schemas.js'
+import { createGroupSchema, updateGroupSchema, membersSchema, moveSchema } from '../schemas.js'
 import {
   getGroup,
   createGroup,
@@ -56,7 +56,7 @@ router.post('/', requireAuth, validateBody(createGroupSchema), async (req, res, 
  * PATCH /api/groups?dn=<dn>
  * Update group attributes.
  */
-router.patch('/', requireAuth, async (req, res, next) => {
+router.patch('/', requireAuth, validateBody(updateGroupSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string

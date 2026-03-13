@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
-import { createOuSchema, renameOuSchema } from '../schemas.js'
+import { createOuSchema, updateOuSchema, renameOuSchema } from '../schemas.js'
 import { createOu, updateOu, deleteOu, renameOu } from '../services/ous.js'
 
 const router = Router()
@@ -26,7 +26,7 @@ router.post('/', requireAuth, validateBody(createOuSchema), async (req, res, nex
  * PATCH /api/ous?dn=<dn>
  * Update an OU's attributes.
  */
-router.patch('/', requireAuth, async (req, res, next) => {
+router.patch('/', requireAuth, validateBody(updateOuSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string
