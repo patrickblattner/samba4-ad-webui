@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import { config } from './config.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { validateDn } from './middleware/validateDn.js'
+import { rateLimitByUser } from './middleware/rateLimit.js'
 import authRoutes from './routes/auth.js'
 import treeRoutes from './routes/tree.js'
 import objectsRoutes from './routes/objects.js'
@@ -23,6 +24,7 @@ app.use(cors({
 }))
 app.use(express.json({ limit: '1mb' }))
 app.use('/api', validateDn)
+app.use('/api', rateLimitByUser)
 
 app.get('/api/health', (_req, res) => {
   res.json({

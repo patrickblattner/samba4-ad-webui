@@ -56,4 +56,11 @@ export const config = {
   crypto: {
     encryptionKey,
   },
+
+  rateLimit: {
+    writeWindowMs: parseInt(process.env.RATE_LIMIT_WRITE_WINDOW_MS || '60000', 10),
+    writeMax: parseInt(process.env.RATE_LIMIT_WRITE_MAX || '30', 10),
+    readWindowMs: parseInt(process.env.RATE_LIMIT_READ_WINDOW_MS || '60000', 10),
+    readMax: parseInt(process.env.RATE_LIMIT_READ_MAX || '60', 10),
+  },
 }
