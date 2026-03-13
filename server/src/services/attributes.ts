@@ -4,10 +4,47 @@ import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { type Credentials } from '../utils/ldapHelpers.js'
 
+/**
+ * Decode a 16-byte objectGUID buffer to standard Microsoft GUID string.
+ * Byte order: first 3 groups little-endian, last 2 groups big-endian.
+ */
+function decodeObjectGUID(buf: Buffer): string {
+  if (buf.length !== 16) return buf.toString('hex')
+  const hex = (b: number) => b.toString(16).padStart(2, '0')
+  const p1 = [buf[3], buf[2], buf[1], buf[0]].map(hex).join('')
+  const p2 = [buf[5], buf[4]].map(hex).join('')
+  const p3 = [buf[7], buf[6]].map(hex).join('')
+  const p4 = [buf[8], buf[9]].map(hex).join('')
+  const p5 = [buf[10], buf[11], buf[12], buf[13], buf[14], buf[15]].map(hex).join('')
+  return `{${p1}-${p2}-${p3}-${p4}-${p5}}`
+}
+
+/**
+ * Decode a binary SID buffer to standard string format: S-1-5-21-...
+ */
+function decodeObjectSid(buf: Buffer): string {
+  if (buf.length < 8) return buf.toString('hex')
+  const revision = buf[0]
+  const subAuthorityCount = buf[1]
+  // 6-byte big-endian authority (bytes 2..7)
+  const authority = buf.readUIntBE(2, 6)
+  let sid = `S-${revision}-${authority}`
+  for (let i = 0; i < subAuthorityCount; i++) {
+    const offset = 8 + i * 4
+    if (offset + 4 > buf.length) break
+    sid += `-${buf.readUInt32LE(offset)}`
+  }
+  return sid
+}
+
+/** Attributes with dedicated decoders — not treated as opaque binary */
+const DECODED_ATTRIBUTES: Record<string, (buf: Buffer) => string> = {
+  objectGUID: decodeObjectGUID,
+  objectSid: decodeObjectSid,
+}
+
 /** Attributes that contain binary data and should not be returned as strings */
 const BINARY_ATTRIBUTES = new Set([
-  'objectGUID',
-  'objectSid',
   'logonHours',
   'thumbnailPhoto',
   'jpegPhoto',
@@ -33,6 +70,8 @@ const toStringValues = (name: string, value: unknown): string[] => {
   if (value === undefined || value === null) return []
 
   if (Buffer.isBuffer(value)) {
+    const decoder = DECODED_ATTRIBUTES[name]
+    if (decoder) return [decoder(value)]
     if (BINARY_ATTRIBUTES.has(name)) return ['<Binary>']
     return [value.toString('base64')]
   }
@@ -40,6 +79,8 @@ const toStringValues = (name: string, value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value.map((v) => {
       if (Buffer.isBuffer(v)) {
+        const decoder = DECODED_ATTRIBUTES[name]
+        if (decoder) return decoder(v)
         if (BINARY_ATTRIBUTES.has(name)) return '<Binary>'
         return v.toString('base64')
       }
