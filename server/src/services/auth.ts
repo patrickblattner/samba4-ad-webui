@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import { config } from '../config.js'
-import { encrypt } from './crypto.js'
+import { encrypt, decrypt } from './crypto.js'
 import { createClient, bindAsUser, search, unbind } from './ldap.js'
 import type { LoginResponse, JwtPayload } from '@samba-ad/shared'
+import { escapeLdapFilterValue } from '../utils/ldapEscape.js'
 
 /**
  * Extract a string value from an LDAP entry attribute.
@@ -57,7 +58,7 @@ export const login = async (
 
   try {
     const entries = await search(client, baseDn, {
-      filter: `(userPrincipalName=${upn})`,
+      filter: `(userPrincipalName=${escapeLdapFilterValue(upn)})`,
       scope: 'sub',
       attributes: ['dn', 'displayName', 'sAMAccountName'],
     })
@@ -66,7 +67,7 @@ export const login = async (
       // Fallback: search by sAMAccountName
       const samName = username.includes('@') ? username.split('@')[0] : username
       const fallbackEntries = await search(client, baseDn, {
-        filter: `(sAMAccountName=${samName})`,
+        filter: `(sAMAccountName=${escapeLdapFilterValue(samName)})`,
         scope: 'sub',
         attributes: ['dn', 'displayName', 'sAMAccountName'],
       })
@@ -112,10 +113,27 @@ export const login = async (
 }
 
 /**
- * Refresh an existing (still valid) token — issue a new one with a fresh expiry.
+ * Refresh an existing (still valid) token — re-validate LDAP bind before
+ * issuing a new token with a fresh expiry.
  */
-export const refreshToken = (existingToken: string): { token: string } => {
+export const refreshToken = async (existingToken: string): Promise<{ token: string }> => {
   const decoded = jwt.verify(existingToken, config.jwt.secret) as JwtPayload
+
+  // Re-validate that the AD account is still active by attempting an LDAP bind
+  const credentialJson = decrypt(decoded.encryptedCredentials, config.crypto.encryptionKey)
+  const { dn, password } = JSON.parse(credentialJson) as { dn: string; password: string }
+
+  const client = createClient(config.ldap.url)
+  try {
+    await bindAsUser(client, dn, password)
+  } catch {
+    throw Object.assign(new Error('AD account is no longer valid'), {
+      statusCode: 401,
+      code: 'ACCOUNT_INVALID',
+    })
+  } finally {
+    await unbind(client).catch(() => {})
+  }
 
   const payload: Omit<JwtPayload, 'iat' | 'exp'> = {
     dn: decoded.dn,

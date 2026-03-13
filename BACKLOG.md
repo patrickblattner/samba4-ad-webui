@@ -16,11 +16,7 @@ Tasks are ordered by priority within each column.
 
 ## Backlog
 
-### [Security] JWT in localStorage (#15)
-- Risikobewertung: HttpOnly Cookie als Alternative prüfen
 
-### [Security] Token Refresh ohne LDAP-Re-Validierung (#16)
-- Bei Refresh prüfen, ob AD-Konto noch aktiv ist
 
 ### [Security] Fehlende Schema-Validierung (#17)
 - Zod/Joi für API-Input-Validierung einführen
@@ -49,6 +45,8 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#15 [Security] JWT localStorage — accepted risk](https://github.com/patrickblattner/samba4-ad-webui/issues/15)
+- [#18 [Security] DN-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/18)
 - [#19 [Security] Body-Size-Limit](https://github.com/patrickblattner/samba4-ad-webui/issues/19)
 - [#14 [Security] Encryption Key Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/14)
 - [#13 [Security] JWT Secret Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/13)

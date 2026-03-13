@@ -49,7 +49,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
  * POST /api/auth/refresh
  * Issue a new token from an existing valid token.
  */
-router.post('/refresh', (req, res, next) => {
+router.post('/refresh', async (req, res, next) => {
   try {
     const { token } = req.body as { token: string }
 
@@ -63,7 +63,7 @@ router.post('/refresh', (req, res, next) => {
       return
     }
 
-    const result = refreshToken(token)
+    const result = await refreshToken(token)
     res.json(result)
   } catch (err) {
     next(err)
