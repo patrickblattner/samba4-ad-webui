@@ -12,6 +12,7 @@ docker/docker-compose.yml
 docs/
 *.log
 .DS_Store
+*.tsbuildinfo
 client/e2e/
 client/playwright-report/
 client/test-results/
