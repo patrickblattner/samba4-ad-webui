@@ -22,6 +22,7 @@ export const listObjects = async (
       scope: 'one',
       filter: objectListFilter(type),
       attributes: ['dn', 'objectClass', 'name', 'sAMAccountName', 'description', 'userAccountControl'],
+      sizeLimit: 5000,
     })
 
     const objects: ObjectSummary[] = entries.map(entry => {

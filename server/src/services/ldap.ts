@@ -32,13 +32,22 @@ export const bindAsUser = async (
 
 /**
  * Search the directory and return matching entries.
+ * Uses LDAP paged results control by default to handle
+ * directories with more entries than the server size limit.
  */
 export const search = async (
   client: Client,
   baseDn: string,
   options: SearchOptions,
 ): Promise<Entry[]> => {
-  const result = await client.search(baseDn, options)
+  // Enable paging by default for searches that may return many results.
+  // 'base' scope returns at most 1 entry, so no paging needed.
+  const shouldPage = options.scope !== 'base' && options.paged === undefined
+  const searchOptions = shouldPage
+    ? { ...options, paged: { pageSize: 200 } }
+    : options
+
+  const result = await client.search(baseDn, searchOptions)
   return result.searchEntries
 }
 
