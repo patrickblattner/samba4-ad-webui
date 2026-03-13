@@ -1,0 +1,3 @@
+# Claude Code local state
+.claude/worklogs/
+.claude/settings.local.json
