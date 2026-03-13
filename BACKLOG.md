@@ -8,7 +8,7 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-- [#2 Phase 2: Tree View + Object Listing](https://github.com/patrickblattner/samba4-ad-webui/issues/2)
+- [#3 Phase 3: User Management (CRUD, Properties, Password)](https://github.com/patrickblattner/samba4-ad-webui/issues/3)
 
 ---
 
@@ -29,3 +29,4 @@ Tasks are ordered by priority within each column.
 ## Done
 
 - [#1 Phase 1: Authentication (Login, JWT, LDAP Bind)](https://github.com/patrickblattner/samba4-ad-webui/issues/1)
+- [#2 Phase 2: Tree View + Object Listing](https://github.com/patrickblattner/samba4-ad-webui/issues/2)
