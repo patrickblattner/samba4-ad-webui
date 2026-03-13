@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import { config } from './config.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import authRoutes from './routes/auth.js'
@@ -14,11 +15,16 @@ import searchRoutes from './routes/search.js'
 
 const app = express()
 
+app.use(helmet())
 app.use(cors())
 app.use(express.json())
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    ldapsConfigured: config.ldap.ldapsUrl.startsWith('ldaps://'),
+  })
 })
 
 app.use('/api/auth', authRoutes)

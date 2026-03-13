@@ -8,8 +8,8 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### [QA] Kein React Error Boundary (#22)
-- Error Boundary für graceful error handling im Frontend
+### [Security] Fehlende HTTP Security Headers (#10)
+- Helmet.js integrieren für HSTS, CSP, X-Frame-Options etc.
 
 ---
 
@@ -18,9 +18,6 @@ Tasks are ordered by priority within each column.
 ---
 
 ## Backlog
-
-### [Security] Fehlende HTTP Security Headers (#10)
-- Helmet.js integrieren für HSTS, CSP, X-Frame-Options etc.
 
 ### [Security] Kein Rate Limiting auf Login-Endpoint (#11)
 - Brute-Force-Schutz auf POST /api/auth/login
@@ -71,6 +68,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#22 [QA] React Error Boundary](https://github.com/patrickblattner/samba4-ad-webui/issues/22)
 - [#21 [QA] API Client crasht bei HTTP 204](https://github.com/patrickblattner/samba4-ad-webui/issues/21)
 - [#1 Phase 1: Authentication (Login, JWT, LDAP Bind)](https://github.com/patrickblattner/samba4-ad-webui/issues/1)
 - [#2 Phase 2: Tree View + Object Listing](https://github.com/patrickblattner/samba4-ad-webui/issues/2)
