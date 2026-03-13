@@ -3,6 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { config } from './config.js'
 import { errorHandler } from './middleware/errorHandler.js'
+import { validateDn } from './middleware/validateDn.js'
 import authRoutes from './routes/auth.js'
 import treeRoutes from './routes/tree.js'
 import objectsRoutes from './routes/objects.js'
@@ -21,6 +22,7 @@ app.use(cors({
   credentials: true,
 }))
 app.use(express.json({ limit: '1mb' }))
+app.use('/api', validateDn)
 
 app.get('/api/health', (_req, res) => {
   res.json({

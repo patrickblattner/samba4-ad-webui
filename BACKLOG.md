@@ -25,8 +25,6 @@ Tasks are ordered by priority within each column.
 ### [Security] Fehlende Schema-Validierung (#17)
 - Zod/Joi für API-Input-Validierung einführen
 
-### [Security] DN-Parameter ohne Validierung (#18)
-- DN-Format validieren bevor es als LDAP-Target verwendet wird
 
 
 ### [QA] Keine Input Schema-Validierung (#23)
@@ -51,6 +49,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#19 [Security] Body-Size-Limit](https://github.com/patrickblattner/samba4-ad-webui/issues/19)
 - [#14 [Security] Encryption Key Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/14)
 - [#13 [Security] JWT Secret Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/13)
 - [#12 [Security] CORS Restriction](https://github.com/patrickblattner/samba4-ad-webui/issues/12)
