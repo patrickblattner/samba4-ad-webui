@@ -39,6 +39,7 @@ export default function PasswordResetDialog({
       setPassword('')
       setConfirmPassword('')
       setErrorMsg('')
+      setShowInsecureWarning(false)
     }
   }, [open])
 

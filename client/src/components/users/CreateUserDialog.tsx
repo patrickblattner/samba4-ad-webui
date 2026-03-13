@@ -50,6 +50,7 @@ export default function CreateUserDialog({ open, onOpenChange }: CreateUserDialo
       setAutoFullName(true)
       setAutoSam(true)
       setErrorMsg('')
+      setShowInsecureWarning(false)
     }
   }, [open])
 
