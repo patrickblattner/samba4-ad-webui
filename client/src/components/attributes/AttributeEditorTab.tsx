@@ -27,22 +27,42 @@ interface AttributeEditorTabProps {
   dn: string
 }
 
-/** Attributes that should not be edited */
+/** Attributes that should not be edited (DC-controlled / system attributes) */
 const READ_ONLY_ATTRIBUTES = new Set([
+  // Identity / system
   'objectGUID',
   'objectSid',
-  'whenCreated',
-  'whenChanged',
-  'uSNCreated',
-  'uSNChanged',
-  'objectClass',
-  'instanceType',
-  'subSchemaSubEntry',
-  'structuralObjectClass',
   'distinguishedName',
-  'dscoremorphcount',
   'name',
   'cn',
+  'objectClass',
+  'objectCategory',
+  'instanceType',
+  'sAMAccountType',
+  // Timestamps (DC-managed)
+  'whenCreated',
+  'whenChanged',
+  'createTimeStamp',
+  'modifyTimeStamp',
+  // Replication metadata
+  'uSNCreated',
+  'uSNChanged',
+  // Schema
+  'subSchemaSubEntry',
+  'structuralObjectClass',
+  'subschemaSubentry',
+  // Computed
+  'dscoremorphcount',
+  'sDRightsEffective',
+  'msDS-User-Account-Control-Computed',
+  'isCriticalSystemObject',
+  // Operational that are DC-controlled
+  'lastLogon',
+  'lastLogonTimestamp',
+  'lastLogoff',
+  'logonCount',
+  'badPasswordTime',
+  'badPwdCount',
 ])
 
 export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
