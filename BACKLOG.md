@@ -8,12 +8,6 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### [Security] JWT Secret unsicherer Default (#13)
-- Startup-Validierung: Server darf mit Default-Secret nicht starten
-
-### [Security] Fehlende Validierung des Encryption Key (#14)
-- Key-Länge prüfen, leeren Fallback verhindern
-
 ---
 
 ## Todo
@@ -34,8 +28,6 @@ Tasks are ordered by priority within each column.
 ### [Security] DN-Parameter ohne Validierung (#18)
 - DN-Format validieren bevor es als LDAP-Target verwendet wird
 
-### [Security] Keine Body-Size-Limitierung (#19)
-- express.json({ limit: '1mb' }) o.ä. setzen
 
 ### [QA] Keine Input Schema-Validierung (#23)
 - Zod/Joi für API-Eingaben (überschneidet sich mit #17)
@@ -59,6 +51,8 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#14 [Security] Encryption Key Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/14)
+- [#13 [Security] JWT Secret Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/13)
 - [#12 [Security] CORS Restriction](https://github.com/patrickblattner/samba4-ad-webui/issues/12)
 - [#11 [Security] Rate Limiting Login](https://github.com/patrickblattner/samba4-ad-webui/issues/11)
 - [#10 [Security] HTTP Security Headers](https://github.com/patrickblattner/samba4-ad-webui/issues/10)

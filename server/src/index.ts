@@ -20,7 +20,7 @@ app.use(cors({
   origin: config.cors.origin,
   credentials: true,
 }))
-app.use(express.json())
+app.use(express.json({ limit: '1mb' }))
 
 app.get('/api/health', (_req, res) => {
   res.json({
