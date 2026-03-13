@@ -104,11 +104,11 @@ export const deleteOu = async (
         attributes: ['dn'],
       })
 
-      // Sort by DN length descending (deepest entries first)
+      // Sort by DN component count descending (deepest entries first)
       const childDns = entries
         .map((e) => (e as unknown as Record<string, unknown>).dn as string)
         .filter((childDn) => childDn !== dn)
-        .sort((a, b) => b.length - a.length)
+        .sort((a, b) => b.split(',').length - a.split(',').length)
 
       // Delete children first, then the OU itself
       for (const childDn of childDns) {

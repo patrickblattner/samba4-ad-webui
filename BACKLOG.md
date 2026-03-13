@@ -30,13 +30,13 @@ Tasks are ordered by priority within each column.
 ### [QA] Keine Service-Level Tests (#29)
 - Integration Tests für LDAP-Services
 
-### [QA] OU Delete Sort Bug (#30)
-- Rekursive Löschung sortiert nach DN-Länge statt Tiefe
 
 ---
 
 ## Done
 
+- [#23 [QA] Input Schema-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/23)
+- [#17 [Security] Schema-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/17)
 - [#16 [Security] Token Refresh LDAP-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/16)
 - [#15 [Security] JWT localStorage — accepted risk](https://github.com/patrickblattner/samba4-ad-webui/issues/15)
 - [#18 [Security] DN-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/18)
