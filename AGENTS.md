@@ -28,8 +28,7 @@ These rules are binding for all AI coding agents (Claude Code).
 - Keep DTOs and DB schemas close to their consuming services.
 - Use functional style by default.
 - Avoid classes unless explicitly required (e.g. framework constraints).
-- You MUST NOT add external libraries without explicit approval.
-- If a library seems necessary, propose it and wait for confirmation.
+- External libraries may be installed autonomously when needed for the implementation plan.
 - Use English for all text files, code comments, and documentation.
 
 ## Testing Guidelines
@@ -74,7 +73,8 @@ This project uses dual tracking via the `/task` and `/workflow` skills:
 ## Git Preferences
 
 - Always use `git add .` (not selective staging).
-- Only commit when the user explicitly asks — never auto-commit after changes.
+- Commit autonomously after completing each issue/feature (Conventional Commits).
+- Push to `main` after each commit.
 
 ## Output Rules
 
