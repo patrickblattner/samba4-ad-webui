@@ -8,8 +8,8 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### [QA] API Client crasht bei HTTP 204 (#21)
-- response.json() auf 204 No Content abfangen
+### [QA] Kein React Error Boundary (#22)
+- Error Boundary für graceful error handling im Frontend
 
 ---
 
@@ -49,9 +49,6 @@ Tasks are ordered by priority within each column.
 ### [Security] Keine Body-Size-Limitierung (#19)
 - express.json({ limit: '1mb' }) o.ä. setzen
 
-### [QA] Kein React Error Boundary (#22)
-- Error Boundary für graceful error handling im Frontend
-
 ### [QA] Keine Input Schema-Validierung (#23)
 - Zod/Joi für API-Eingaben (überschneidet sich mit #17)
 
@@ -74,6 +71,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#21 [QA] API Client crasht bei HTTP 204](https://github.com/patrickblattner/samba4-ad-webui/issues/21)
 - [#1 Phase 1: Authentication (Login, JWT, LDAP Bind)](https://github.com/patrickblattner/samba4-ad-webui/issues/1)
 - [#2 Phase 2: Tree View + Object Listing](https://github.com/patrickblattner/samba4-ad-webui/issues/2)
 - [#3 Phase 3: User Management (CRUD, Properties, Password)](https://github.com/patrickblattner/samba4-ad-webui/issues/3)
