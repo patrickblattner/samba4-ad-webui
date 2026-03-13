@@ -1,6 +1,8 @@
 import { Client } from 'ldapts'
 import type { SearchOptions } from 'ldapts'
 import type { Entry } from 'ldapts'
+import { readFileSync } from 'fs'
+import { config } from '../config.js'
 
 export type { Entry, SearchOptions }
 
@@ -13,7 +15,10 @@ export const createClient = (url: string): Client => {
     url,
     ...(isLdaps && {
       tlsOptions: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: config.ldap.tlsRejectUnauthorized,
+        ...(config.ldap.caCertPath && {
+          ca: [readFileSync(config.ldap.caCertPath)],
+        }),
       },
     }),
   })
