@@ -8,7 +8,8 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-- [#7 Phase 7: Context Menus, Search, Polish](https://github.com/patrickblattner/samba4-ad-webui/issues/7)
+### [QA] API Client crasht bei HTTP 204 (#21)
+- response.json() auf 204 No Content abfangen
 
 ---
 
@@ -17,6 +18,57 @@ Tasks are ordered by priority within each column.
 ---
 
 ## Backlog
+
+### [Security] Fehlende HTTP Security Headers (#10)
+- Helmet.js integrieren für HSTS, CSP, X-Frame-Options etc.
+
+### [Security] Kein Rate Limiting auf Login-Endpoint (#11)
+- Brute-Force-Schutz auf POST /api/auth/login
+
+### [Security] CORS vollständig offen (#12)
+- Origin-Einschränkung konfigurieren
+
+### [Security] JWT Secret unsicherer Default (#13)
+- Startup-Validierung: Server darf mit Default-Secret nicht starten
+
+### [Security] Fehlende Validierung des Encryption Key (#14)
+- Key-Länge prüfen, leeren Fallback verhindern
+
+### [Security] JWT in localStorage (#15)
+- Risikobewertung: HttpOnly Cookie als Alternative prüfen
+
+### [Security] Token Refresh ohne LDAP-Re-Validierung (#16)
+- Bei Refresh prüfen, ob AD-Konto noch aktiv ist
+
+### [Security] Fehlende Schema-Validierung (#17)
+- Zod/Joi für API-Input-Validierung einführen
+
+### [Security] DN-Parameter ohne Validierung (#18)
+- DN-Format validieren bevor es als LDAP-Target verwendet wird
+
+### [Security] Keine Body-Size-Limitierung (#19)
+- express.json({ limit: '1mb' }) o.ä. setzen
+
+### [QA] Kein React Error Boundary (#22)
+- Error Boundary für graceful error handling im Frontend
+
+### [QA] Keine Input Schema-Validierung (#23)
+- Zod/Joi für API-Eingaben (überschneidet sich mit #17)
+
+### [QA] Pagination holt alle Objekte (#26)
+- Server-side Pagination via LDAP paging statt in-memory slice
+
+### [QA] Duplicate Helper Functions (#27)
+- toStringArray, determineObjectType etc. zentralisieren
+
+### [QA] Attribute Keys ohne Allowlist (#28)
+- Update-Operationen sollen nur erlaubte Attribute akzeptieren
+
+### [QA] Keine Service-Level Tests (#29)
+- Integration Tests für LDAP-Services
+
+### [QA] OU Delete Sort Bug (#30)
+- Rekursive Löschung sortiert nach DN-Länge statt Tiefe
 
 ---
 
@@ -28,3 +80,6 @@ Tasks are ordered by priority within each column.
 - [#4 Phase 4: Group Management](https://github.com/patrickblattner/samba4-ad-webui/issues/4)
 - [#5 Phase 5: Computer Management](https://github.com/patrickblattner/samba4-ad-webui/issues/5)
 - [#6 Phase 6: Attribute Editor + OU Management](https://github.com/patrickblattner/samba4-ad-webui/issues/6)
+- [#7 Phase 7: Context Menus, Search, Polish](https://github.com/patrickblattner/samba4-ad-webui/issues/7)
+- [#8 [Security] LDAP Injection in Login-Funktion](https://github.com/patrickblattner/samba4-ad-webui/issues/8)
+- [#9 [Security] Warnung bei unverschlüsselter LDAP-Verbindung](https://github.com/patrickblattner/samba4-ad-webui/issues/9)
