@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
+const TEST_SECRET = 'test-secret-for-rate-limit'
+
 vi.mock('../config.js', () => ({
   config: {
     rateLimit: {
@@ -9,6 +11,9 @@ vi.mock('../config.js', () => ({
       writeMax: 3,
       readWindowMs: 60_000,
       readMax: 5,
+    },
+    jwt: {
+      secret: TEST_SECRET,
     },
   },
 }))
@@ -19,7 +24,7 @@ const TEST_DN = 'CN=Administrator,CN=Users,DC=lab,DC=dev'
 const TEST_DN_2 = 'CN=TestUser,CN=Users,DC=lab,DC=dev'
 
 function createToken(dn: string): string {
-  return jwt.sign({ dn, sAMAccountName: 'testuser' }, 'test-secret', { expiresIn: '15m' })
+  return jwt.sign({ dn, sAMAccountName: 'testuser' }, TEST_SECRET, { expiresIn: '15m' })
 }
 
 function createMockRequest(overrides: Partial<Request> = {}): Request {
@@ -27,6 +32,7 @@ function createMockRequest(overrides: Partial<Request> = {}): Request {
     headers: {},
     method: 'GET',
     path: '/users',
+    ip: '127.0.0.1',
     ...overrides,
   } as unknown as Request
 }
@@ -126,25 +132,65 @@ describe('rateLimitByUser middleware', () => {
     expect(next).toHaveBeenCalledTimes(5)
   })
 
-  it('should not rate-limit requests without an authorization header', () => {
-    const req = createMockRequest({ method: 'POST' })
+  it('should IP-rate-limit requests without an authorization header', () => {
+    const req = createMockRequest({ method: 'POST', ip: '10.0.0.1' })
     const res = createMockResponse()
     rateLimitByUser(req, res, next)
 
     expect(next).toHaveBeenCalledTimes(1)
-    expect(res.status).not.toHaveBeenCalled()
+    // Should set rate limit headers (IP-based bucket)
+    expect(res.setHeader).toHaveBeenCalledWith('X-RateLimit-Limit', 200)
+    expect(res.setHeader).toHaveBeenCalledWith('X-RateLimit-Remaining', 199)
   })
 
-  it('should not rate-limit requests with an invalid token', () => {
+  it('should return 429 for unauthenticated requests exceeding IP limit', () => {
+    const ip = '10.0.0.50'
+    // Send 200 requests (the limit)
+    for (let i = 0; i < 200; i++) {
+      const req = createMockRequest({ method: 'GET', ip })
+      const res = createMockResponse()
+      rateLimitByUser(req, res, next)
+    }
+    expect(next).toHaveBeenCalledTimes(200)
+
+    // 201st request should be rejected
+    const req = createMockRequest({ method: 'GET', ip })
+    const res = createMockResponse()
+    rateLimitByUser(req, res, next)
+
+    expect(res.status).toHaveBeenCalledWith(429)
+    expect(next).toHaveBeenCalledTimes(200)
+  })
+
+  it('should fall back to IP-based limiting for forged/invalid tokens', () => {
+    const ip = '10.0.0.99'
     const req = createMockRequest({
       headers: { authorization: 'Bearer not-a-valid-jwt' } as any,
       method: 'POST',
+      ip,
     })
     const res = createMockResponse()
     rateLimitByUser(req, res, next)
 
     expect(next).toHaveBeenCalledTimes(1)
-    expect(res.status).not.toHaveBeenCalled()
+    // Should use unauthenticated IP bucket with 200 limit
+    expect(res.setHeader).toHaveBeenCalledWith('X-RateLimit-Limit', 200)
+  })
+
+  it('should fall back to IP-based limiting for tokens signed with wrong secret', () => {
+    const ip = '10.0.0.88'
+    const forgedToken = jwt.sign({ dn: TEST_DN }, 'wrong-secret', { expiresIn: '15m' })
+    const req = createMockRequest({
+      headers: { authorization: `Bearer ${forgedToken}` } as any,
+      method: 'GET',
+      ip,
+    })
+    const res = createMockResponse()
+    rateLimitByUser(req, res, next)
+
+    expect(next).toHaveBeenCalledTimes(1)
+    // Should use unauthenticated IP bucket, not user DN bucket
+    expect(res.setHeader).toHaveBeenCalledWith('X-RateLimit-Limit', 200)
   })
 
   it('should track read and write buckets separately', () => {
@@ -340,5 +386,21 @@ describe('rateLimitByUser middleware', () => {
       // Only 3 should have passed through (not the 4th)
       expect((next as any).mock.calls.length - callsBefore).toBe(3)
     }
+  })
+
+  it('should use separate IP buckets for different IPs', () => {
+    // IP 1 uses some requests
+    for (let i = 0; i < 5; i++) {
+      const req = createMockRequest({ method: 'GET', ip: '192.168.1.1' })
+      const res = createMockResponse()
+      rateLimitByUser(req, res, next)
+    }
+
+    // IP 2 should have its own fresh bucket
+    const req = createMockRequest({ method: 'GET', ip: '192.168.1.2' })
+    const res = createMockResponse()
+    rateLimitByUser(req, res, next)
+
+    expect(res.setHeader).toHaveBeenCalledWith('X-RateLimit-Remaining', 199)
   })
 })

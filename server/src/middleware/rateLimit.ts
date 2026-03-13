@@ -29,10 +29,15 @@ export function clearRateLimitStore(): void {
   store.clear()
 }
 
+// Generous limit for unauthenticated/invalid-token requests per IP
+const UNAUTH_MAX = 200
+const UNAUTH_WINDOW_MS = 60_000
+
 /**
  * Per-user rate limiting middleware.
- * Uses the user DN from the JWT to track request counts in separate
+ * Uses the user DN from a verified JWT to track request counts in separate
  * "read" and "write" buckets with fixed time windows.
+ * Falls back to IP-based rate limiting for unauthenticated or invalid-token requests.
  */
 export function rateLimitByUser(req: Request, res: Response, next: NextFunction): void {
   // Skip /auth paths
@@ -41,39 +46,44 @@ export function rateLimitByUser(req: Request, res: Response, next: NextFunction)
     return
   }
 
-  // Extract user DN from JWT (decode only, auth middleware handles verification)
+  // Extract and verify user DN from JWT
   const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    next()
-    return
+  let userDn: string | null = null
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    try {
+      const verified = jwt.verify(token, config.jwt.secret) as { dn?: string }
+      if (verified && verified.dn) {
+        userDn = verified.dn
+      }
+    } catch {
+      // Invalid/expired token — fall through to IP-based limiting
+    }
   }
 
-  const token = authHeader.slice(7)
-  let decoded: { dn?: string } | null = null
-  try {
-    decoded = jwt.decode(token) as { dn?: string } | null
-  } catch {
-    next()
-    return
-  }
-
-  if (!decoded || !decoded.dn) {
-    next()
-    return
-  }
-
-  const userDn = decoded.dn
   const method = req.method.toUpperCase()
-
-  // Determine bucket and limits
   const isWrite = method === 'POST' || method === 'PATCH' || method === 'DELETE' || method === 'PUT'
-  const bucket = isWrite ? 'write' : 'read'
-  const windowMs = isWrite ? config.rateLimit.writeWindowMs : config.rateLimit.readWindowMs
-  const maxRequests = isWrite ? config.rateLimit.writeMax : config.rateLimit.readMax
 
-  const key = `${userDn}:${bucket}`
+  let key: string
+  let windowMs: number
+  let maxRequests: number
+
+  if (userDn) {
+    // Authenticated: per-user bucket
+    const bucket = isWrite ? 'write' : 'read'
+    key = `${userDn}:${bucket}`
+    windowMs = isWrite ? config.rateLimit.writeWindowMs : config.rateLimit.readWindowMs
+    maxRequests = isWrite ? config.rateLimit.writeMax : config.rateLimit.readMax
+  } else {
+    // Unauthenticated or invalid token: IP-based bucket
+    const ip = req.ip || 'unknown'
+    key = `${ip}:unauth`
+    windowMs = UNAUTH_WINDOW_MS
+    maxRequests = UNAUTH_MAX
+  }
+
   const now = Date.now()
-
   let entry = store.get(key)
 
   // If no entry or window expired, start a new window
