@@ -4,6 +4,8 @@ import type { ObjectSummary } from '@samba-ad/shared'
 import { useObjectList } from '@/hooks/useObjectList'
 import { useDirectoryStore } from '@/stores/directoryStore'
 import { useDeleteUser, useEnableUser, useDisableUser } from '@/hooks/useUserMutations'
+import { useDeleteGroup } from '@/hooks/useGroupMutations'
+import { useDeleteComputer } from '@/hooks/useComputerMutations'
 import {
   Table,
   TableBody,
@@ -17,6 +19,10 @@ import ObjectListToolbar from './ObjectListToolbar'
 import UserPropertiesDialog from '@/components/users/UserPropertiesDialog'
 import CreateUserDialog from '@/components/users/CreateUserDialog'
 import PasswordResetDialog from '@/components/users/PasswordResetDialog'
+import GroupPropertiesDialog from '@/components/groups/GroupPropertiesDialog'
+import CreateGroupDialog from '@/components/groups/CreateGroupDialog'
+import ComputerPropertiesDialog from '@/components/computers/ComputerPropertiesDialog'
+import CreateComputerDialog from '@/components/computers/CreateComputerDialog'
 
 function ObjectIcon({ type }: { type: ObjectSummary['type'] }) {
   const className = 'h-4 w-4 shrink-0'
@@ -55,28 +61,63 @@ export default function ObjectList() {
   const { data, isLoading, error } = useObjectList(selectedNode)
 
   const [selectedDn, setSelectedDn] = useState<string | null>(null)
-  const [propertiesDn, setPropertiesDn] = useState<string | null>(null)
-  const [propertiesOpen, setPropertiesOpen] = useState(false)
-  const [createOpen, setCreateOpen] = useState(false)
+
+  // User dialogs
+  const [userPropertiesDn, setUserPropertiesDn] = useState<string | null>(null)
+  const [userPropertiesOpen, setUserPropertiesOpen] = useState(false)
+  const [createUserOpen, setCreateUserOpen] = useState(false)
   const [passwordResetOpen, setPasswordResetOpen] = useState(false)
 
-  const deleteMutation = useDeleteUser()
+  // Group dialogs
+  const [groupPropertiesDn, setGroupPropertiesDn] = useState<string | null>(null)
+  const [groupPropertiesOpen, setGroupPropertiesOpen] = useState(false)
+  const [createGroupOpen, setCreateGroupOpen] = useState(false)
+
+  // Computer dialogs
+  const [computerPropertiesDn, setComputerPropertiesDn] = useState<string | null>(null)
+  const [computerPropertiesOpen, setComputerPropertiesOpen] = useState(false)
+  const [createComputerOpen, setCreateComputerOpen] = useState(false)
+
+  const deleteUserMutation = useDeleteUser()
   const enableMutation = useEnableUser()
   const disableMutation = useDisableUser()
+  const deleteGroupMutation = useDeleteGroup()
+  const deleteComputerMutation = useDeleteComputer()
 
   const selectedObj = data?.data.find((o) => o.dn === selectedDn) ?? null
 
   function handleDoubleClick(obj: ObjectSummary) {
-    if (obj.type === 'user') {
-      setPropertiesDn(obj.dn)
-      setPropertiesOpen(true)
+    switch (obj.type) {
+      case 'user':
+        setUserPropertiesDn(obj.dn)
+        setUserPropertiesOpen(true)
+        break
+      case 'group':
+        setGroupPropertiesDn(obj.dn)
+        setGroupPropertiesOpen(true)
+        break
+      case 'computer':
+        setComputerPropertiesDn(obj.dn)
+        setComputerPropertiesOpen(true)
+        break
     }
   }
 
   function handleDelete() {
     if (!selectedDn || !selectedObj) return
     if (!window.confirm(`Delete ${selectedObj.name}?`)) return
-    deleteMutation.mutate(selectedDn)
+
+    switch (selectedObj.type) {
+      case 'user':
+        deleteUserMutation.mutate(selectedDn)
+        break
+      case 'group':
+        deleteGroupMutation.mutate(selectedDn)
+        break
+      case 'computer':
+        deleteComputerMutation.mutate(selectedDn)
+        break
+    }
     setSelectedDn(null)
   }
 
@@ -108,7 +149,9 @@ export default function ObjectList() {
       <ObjectListToolbar
         selectedType={selectedObj?.type ?? null}
         selectedEnabled={selectedObj?.type === 'user' ? (selectedObj.enabled ?? null) : null}
-        onNewUser={() => setCreateOpen(true)}
+        onNewUser={() => setCreateUserOpen(true)}
+        onNewGroup={() => setCreateGroupOpen(true)}
+        onNewComputer={() => setCreateComputerOpen(true)}
         onDelete={handleDelete}
         onEnable={handleEnable}
         onDisable={handleDisable}
@@ -187,13 +230,14 @@ export default function ObjectList() {
         </div>
       )}
 
+      {/* User dialogs */}
       <UserPropertiesDialog
-        dn={propertiesDn}
-        open={propertiesOpen}
-        onOpenChange={setPropertiesOpen}
+        dn={userPropertiesDn}
+        open={userPropertiesOpen}
+        onOpenChange={setUserPropertiesOpen}
       />
 
-      <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateUserDialog open={createUserOpen} onOpenChange={setCreateUserOpen} />
 
       <PasswordResetDialog
         dn={selectedDn}
@@ -201,6 +245,24 @@ export default function ObjectList() {
         open={passwordResetOpen}
         onOpenChange={setPasswordResetOpen}
       />
+
+      {/* Group dialogs */}
+      <GroupPropertiesDialog
+        dn={groupPropertiesDn}
+        open={groupPropertiesOpen}
+        onOpenChange={setGroupPropertiesOpen}
+      />
+
+      <CreateGroupDialog open={createGroupOpen} onOpenChange={setCreateGroupOpen} />
+
+      {/* Computer dialogs */}
+      <ComputerPropertiesDialog
+        dn={computerPropertiesDn}
+        open={computerPropertiesOpen}
+        onOpenChange={setComputerPropertiesOpen}
+      />
+
+      <CreateComputerDialog open={createComputerOpen} onOpenChange={setCreateComputerOpen} />
     </div>
   )
 }

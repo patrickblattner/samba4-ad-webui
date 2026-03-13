@@ -6,6 +6,8 @@ import authRoutes from './routes/auth.js'
 import treeRoutes from './routes/tree.js'
 import objectsRoutes from './routes/objects.js'
 import usersRoutes from './routes/users.js'
+import groupsRoutes from './routes/groups.js'
+import computersRoutes from './routes/computers.js'
 
 const app = express()
 
@@ -20,6 +22,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/tree', treeRoutes)
 app.use('/api/objects', objectsRoutes)
 app.use('/api/users', usersRoutes)
+app.use('/api/groups', groupsRoutes)
+app.use('/api/computers', computersRoutes)
 
 app.use(errorHandler)
 

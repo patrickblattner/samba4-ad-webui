@@ -1,4 +1,4 @@
-import { UserPlus, Trash2, UserCheck, UserX, KeyRound } from 'lucide-react'
+import { UserPlus, Users, Monitor, Trash2, UserCheck, UserX, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
@@ -6,6 +6,8 @@ interface ObjectListToolbarProps {
   selectedType: string | null
   selectedEnabled: boolean | null
   onNewUser: () => void
+  onNewGroup: () => void
+  onNewComputer: () => void
   onDelete: () => void
   onEnable: () => void
   onDisable: () => void
@@ -16,6 +18,8 @@ export default function ObjectListToolbar({
   selectedType,
   selectedEnabled,
   onNewUser,
+  onNewGroup,
+  onNewComputer,
   onDelete,
   onEnable,
   onDisable,
@@ -29,6 +33,16 @@ export default function ObjectListToolbar({
       <Button variant="ghost" size="sm" onClick={onNewUser} title="New User">
         <UserPlus className="mr-1 h-4 w-4" />
         New User
+      </Button>
+
+      <Button variant="ghost" size="sm" onClick={onNewGroup} title="New Group">
+        <Users className="mr-1 h-4 w-4" />
+        New Group
+      </Button>
+
+      <Button variant="ghost" size="sm" onClick={onNewComputer} title="New Computer">
+        <Monitor className="mr-1 h-4 w-4" />
+        New Computer
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
