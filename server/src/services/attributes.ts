@@ -1,6 +1,7 @@
 import { Attribute, Change } from 'ldapts'
 import type { LdapAttribute, AttributeChange } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
+import { getSchemaAttributes } from './schema.js'
 import { config } from '../config.js'
 import { type Credentials } from '../utils/ldapHelpers.js'
 
@@ -116,12 +117,30 @@ export const getAttributes = async (
     const entry = entries[0] as unknown as Record<string, unknown>
     const attributes: LdapAttribute[] = []
 
+    // Extract objectClass for schema query
+    const objectClasses: string[] = []
+    const rawOc = entry['objectClass']
+    if (Array.isArray(rawOc)) {
+      objectClasses.push(...rawOc.map(String))
+    } else if (rawOc) {
+      objectClasses.push(String(rawOc))
+    }
+
     for (const [name, value] of Object.entries(entry)) {
       if (name === 'dn' || name === 'controls') continue
       // Filter out LDAP request selectors that ldapts returns as properties
       if (name === '*' || name === '+') continue
       const values = toStringValues(name, value)
       attributes.push({ name, values })
+    }
+
+    // Get all schema attributes and add unset ones
+    const schemaAttrs = await getSchemaAttributes(client, objectClasses)
+    const presentNames = new Set(attributes.map(a => a.name.toLowerCase()))
+    for (const schemaAttr of schemaAttrs) {
+      if (!presentNames.has(schemaAttr.toLowerCase())) {
+        attributes.push({ name: schemaAttr, values: [] })
+      }
     }
 
     // Sort alphabetically by attribute name
