@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import { login, refreshToken } from '../services/auth.js'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
@@ -6,11 +7,24 @@ import type { LoginRequest } from '@samba-ad/shared'
 
 const router = Router()
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: 'RATE_LIMITED',
+      message: 'Too many login attempts, please try again after 15 minutes',
+    },
+  },
+})
+
 /**
  * POST /api/auth/login
  * Authenticate with username + password, returns JWT token + user info.
  */
-router.post('/login', async (req, res, next) => {
+router.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { username, password } = req.body as LoginRequest
 

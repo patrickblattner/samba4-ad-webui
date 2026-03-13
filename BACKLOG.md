@@ -8,8 +8,8 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### [Security] Fehlende HTTP Security Headers (#10)
-- Helmet.js integrieren für HSTS, CSP, X-Frame-Options etc.
+### [Security] Kein Rate Limiting auf Login-Endpoint (#11)
+- Brute-Force-Schutz auf POST /api/auth/login
 
 ---
 
@@ -18,9 +18,6 @@ Tasks are ordered by priority within each column.
 ---
 
 ## Backlog
-
-### [Security] Kein Rate Limiting auf Login-Endpoint (#11)
-- Brute-Force-Schutz auf POST /api/auth/login
 
 ### [Security] CORS vollständig offen (#12)
 - Origin-Einschränkung konfigurieren
@@ -68,6 +65,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#10 [Security] HTTP Security Headers](https://github.com/patrickblattner/samba4-ad-webui/issues/10)
 - [#22 [QA] React Error Boundary](https://github.com/patrickblattner/samba4-ad-webui/issues/22)
 - [#21 [QA] API Client crasht bei HTTP 204](https://github.com/patrickblattner/samba4-ad-webui/issues/21)
 - [#1 Phase 1: Authentication (Login, JWT, LDAP Bind)](https://github.com/patrickblattner/samba4-ad-webui/issues/1)
