@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
+import { validateBody } from '../middleware/validate.js'
+import { updateAttributesSchema } from '../schemas.js'
 import { getAttributes, updateAttributes } from '../services/attributes.js'
 
 const router = Router()
@@ -32,7 +34,7 @@ router.get('/', requireAuth, async (req, res, next) => {
  * PATCH /api/attributes?dn=<dn>
  * Apply attribute modifications to an LDAP object.
  */
-router.patch('/', requireAuth, async (req, res, next) => {
+router.patch('/', requireAuth, validateBody(updateAttributesSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string
@@ -44,15 +46,7 @@ router.patch('/', requireAuth, async (req, res, next) => {
       return
     }
 
-    const { changes } = req.body
-    if (!Array.isArray(changes)) {
-      res.status(400).json({
-        error: { code: 'INVALID_BODY', message: 'Body must contain a "changes" array' },
-      })
-      return
-    }
-
-    await updateAttributes(authReq.credentials, dn, changes)
+    await updateAttributes(authReq.credentials, dn, req.body.changes)
     res.json({ success: true })
   } catch (err) {
     next(err)

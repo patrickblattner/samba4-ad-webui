@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
+import { validateBody } from '../middleware/validate.js'
+import { createOuSchema, renameOuSchema } from '../schemas.js'
 import { createOu, updateOu, deleteOu, renameOu } from '../services/ous.js'
 
 const router = Router()
@@ -9,21 +11,10 @@ const router = Router()
  * POST /api/ous
  * Create a new Organizational Unit.
  */
-router.post('/', requireAuth, async (req, res, next) => {
+router.post('/', requireAuth, validateBody(createOuSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const { name, parentDn, description } = req.body
-
-    if (!name || !parentDn) {
-      res.status(400).json({
-        error: {
-          code: 'MISSING_FIELDS',
-          message: 'Fields "name" and "parentDn" are required',
-        },
-      })
-      return
-    }
-
     const dn = await createOu(authReq.credentials, name, parentDn, description)
     res.status(201).json({ dn })
   } catch (err) {
@@ -82,11 +73,10 @@ router.delete('/', requireAuth, async (req, res, next) => {
  * POST /api/ous/rename?dn=<dn>
  * Rename an OU.
  */
-router.post('/rename', requireAuth, async (req, res, next) => {
+router.post('/rename', requireAuth, validateBody(renameOuSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string
-    const { newName } = req.body
 
     if (!dn) {
       res.status(400).json({
@@ -95,14 +85,7 @@ router.post('/rename', requireAuth, async (req, res, next) => {
       return
     }
 
-    if (!newName) {
-      res.status(400).json({
-        error: { code: 'MISSING_NAME', message: 'Field "newName" is required' },
-      })
-      return
-    }
-
-    const newDn = await renameOu(authReq.credentials, dn, newName)
+    const newDn = await renameOu(authReq.credentials, dn, req.body.newName)
     res.json({ newDn })
   } catch (err) {
     next(err)

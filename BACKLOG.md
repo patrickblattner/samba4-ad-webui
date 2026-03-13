@@ -18,14 +18,6 @@ Tasks are ordered by priority within each column.
 
 
 
-### [Security] Fehlende Schema-Validierung (#17)
-- Zod/Joi für API-Input-Validierung einführen
-
-
-
-### [QA] Keine Input Schema-Validierung (#23)
-- Zod/Joi für API-Eingaben (überschneidet sich mit #17)
-
 ### [QA] Pagination holt alle Objekte (#26)
 - Server-side Pagination via LDAP paging statt in-memory slice
 
@@ -45,6 +37,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#16 [Security] Token Refresh LDAP-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/16)
 - [#15 [Security] JWT localStorage — accepted risk](https://github.com/patrickblattner/samba4-ad-webui/issues/15)
 - [#18 [Security] DN-Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/18)
 - [#19 [Security] Body-Size-Limit](https://github.com/patrickblattner/samba4-ad-webui/issues/19)

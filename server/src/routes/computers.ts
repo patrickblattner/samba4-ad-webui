@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
+import { validateBody } from '../middleware/validate.js'
+import { createComputerSchema, moveSchema } from '../schemas.js'
 import {
   getComputer,
   createComputer,
@@ -38,21 +40,9 @@ router.get('/', requireAuth, async (req, res, next) => {
  * POST /api/computers
  * Create (pre-stage) a new computer account.
  */
-router.post('/', requireAuth, async (req, res, next) => {
+router.post('/', requireAuth, validateBody(createComputerSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
-    const { parentDn, name, sAMAccountName } = req.body
-
-    if (!parentDn || !name || !sAMAccountName) {
-      res.status(400).json({
-        error: {
-          code: 'MISSING_FIELDS',
-          message: 'Fields parentDn, name, and sAMAccountName are required',
-        },
-      })
-      return
-    }
-
     const dn = await createComputer(authReq.credentials, req.body)
     res.status(201).json({ dn })
   } catch (err) {
@@ -110,11 +100,10 @@ router.delete('/', requireAuth, async (req, res, next) => {
  * POST /api/computers/move?dn=<dn>
  * Move a computer to a different OU/container.
  */
-router.post('/move', requireAuth, async (req, res, next) => {
+router.post('/move', requireAuth, validateBody(moveSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string
-    const { targetOu } = req.body
 
     if (!dn) {
       res.status(400).json({
@@ -123,14 +112,7 @@ router.post('/move', requireAuth, async (req, res, next) => {
       return
     }
 
-    if (!targetOu) {
-      res.status(400).json({
-        error: { code: 'MISSING_TARGET', message: 'Field "targetOu" is required' },
-      })
-      return
-    }
-
-    const newDn = await moveComputer(authReq.credentials, dn, targetOu)
+    const newDn = await moveComputer(authReq.credentials, dn, req.body.targetOu)
     res.json({ dn: newDn })
   } catch (err) {
     next(err)

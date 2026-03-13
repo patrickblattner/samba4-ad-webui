@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
+import { validateBody } from '../middleware/validate.js'
+import { createUserSchema, passwordResetSchema, moveSchema } from '../schemas.js'
 import {
   getUser,
   createUser,
@@ -41,21 +43,9 @@ router.get('/', requireAuth, async (req, res, next) => {
  * POST /api/users
  * Create a new user.
  */
-router.post('/', requireAuth, async (req, res, next) => {
+router.post('/', requireAuth, validateBody(createUserSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
-    const { parentDn, sAMAccountName, userPrincipalName, password } = req.body
-
-    if (!parentDn || !sAMAccountName || !userPrincipalName || !password) {
-      res.status(400).json({
-        error: {
-          code: 'MISSING_FIELDS',
-          message: 'Fields parentDn, sAMAccountName, userPrincipalName, and password are required',
-        },
-      })
-      return
-    }
-
     const dn = await createUser(authReq.credentials, req.body)
     res.status(201).json({ dn })
   } catch (err) {
@@ -113,11 +103,10 @@ router.delete('/', requireAuth, async (req, res, next) => {
  * POST /api/users/password?dn=<dn>
  * Reset a user's password.
  */
-router.post('/password', requireAuth, async (req, res, next) => {
+router.post('/password', requireAuth, validateBody(passwordResetSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string
-    const { newPassword } = req.body
 
     if (!dn) {
       res.status(400).json({
@@ -126,14 +115,7 @@ router.post('/password', requireAuth, async (req, res, next) => {
       return
     }
 
-    if (!newPassword) {
-      res.status(400).json({
-        error: { code: 'MISSING_PASSWORD', message: 'Field "newPassword" is required' },
-      })
-      return
-    }
-
-    await resetPassword(authReq.credentials, dn, newPassword)
+    await resetPassword(authReq.credentials, dn, req.body.newPassword)
     res.status(204).end()
   } catch (err) {
     next(err)
@@ -190,11 +172,10 @@ router.post('/disable', requireAuth, async (req, res, next) => {
  * POST /api/users/move?dn=<dn>
  * Move a user to a different OU/container.
  */
-router.post('/move', requireAuth, async (req, res, next) => {
+router.post('/move', requireAuth, validateBody(moveSchema), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest
     const dn = req.query.dn as string
-    const { targetOu } = req.body
 
     if (!dn) {
       res.status(400).json({
@@ -203,14 +184,7 @@ router.post('/move', requireAuth, async (req, res, next) => {
       return
     }
 
-    if (!targetOu) {
-      res.status(400).json({
-        error: { code: 'MISSING_TARGET', message: 'Field "targetOu" is required' },
-      })
-      return
-    }
-
-    const newDn = await moveUser(authReq.credentials, dn, targetOu)
+    const newDn = await moveUser(authReq.credentials, dn, req.body.targetOu)
     res.json({ dn: newDn })
   } catch (err) {
     next(err)
