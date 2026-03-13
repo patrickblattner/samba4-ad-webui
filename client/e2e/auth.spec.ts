@@ -22,7 +22,8 @@ test.describe('Authentication', () => {
     await page.getByLabel('Username').fill('Administrator')
     await page.getByLabel('Password').fill('Admin1234!')
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await expect(page.getByText(/welcome/i)).toBeVisible({ timeout: 15000 })
+    // After login, the directory page loads with tree/header
+    await expect(page.getByText('Samba4 AD Web UI').first()).toBeVisible({ timeout: 15000 })
     await expect(page).toHaveURL('http://localhost:5173/')
   })
 
@@ -31,7 +32,7 @@ test.describe('Authentication', () => {
     await page.getByLabel('Username').fill('Administrator')
     await page.getByLabel('Password').fill('Admin1234!')
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await expect(page.getByText(/welcome/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('Samba4 AD Web UI').first()).toBeVisible({ timeout: 15000 })
 
     await page.getByText(/sign out/i).click()
     await page.waitForURL(/\/login/)
@@ -43,9 +44,12 @@ test.describe('Authentication', () => {
     await page.getByLabel('Username').fill('Administrator')
     await page.getByLabel('Password').fill('Admin1234!')
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await expect(page.getByText(/welcome/i)).toBeVisible({ timeout: 15000 })
+    // Wait for directory page to fully load (sign out button only appears when logged in)
+    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible({ timeout: 15000 })
 
     await page.reload()
-    await expect(page.getByText(/welcome/i)).toBeVisible({ timeout: 15000 })
+    // After reload, should still be on the directory page with sign out visible
+    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible({ timeout: 15000 })
+    await expect(page).not.toHaveURL(/\/login/)
   })
 })

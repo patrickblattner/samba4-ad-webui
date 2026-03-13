@@ -3,6 +3,8 @@ import cors from 'cors'
 import { config } from './config.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import authRoutes from './routes/auth.js'
+import treeRoutes from './routes/tree.js'
+import objectsRoutes from './routes/objects.js'
 
 const app = express()
 
@@ -14,6 +16,8 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/tree', treeRoutes)
+app.use('/api/objects', objectsRoutes)
 
 app.use(errorHandler)
 
