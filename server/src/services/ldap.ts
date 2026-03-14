@@ -1,10 +1,11 @@
-import { Client } from 'ldapts'
+import { Client, Control } from 'ldapts'
 import type { SearchOptions } from 'ldapts'
 import type { Entry } from 'ldapts'
 import { readFileSync } from 'fs'
 import { config } from '../config.js'
 
 export type { Entry, SearchOptions }
+export { Control }
 
 /**
  * Create a new ldapts Client for the given LDAP URL.
@@ -44,6 +45,7 @@ export const search = async (
   client: Client,
   baseDn: string,
   options: SearchOptions,
+  controls?: Control | Control[],
 ): Promise<Entry[]> => {
   // Enable paging by default for searches that may return many results.
   // 'base' scope returns at most 1 entry, so no paging needed.
@@ -52,7 +54,7 @@ export const search = async (
     ? { ...options, paged: { pageSize: 200 } }
     : options
 
-  const result = await client.search(baseDn, searchOptions)
+  const result = await client.search(baseDn, searchOptions, controls)
   return result.searchEntries
 }
 
