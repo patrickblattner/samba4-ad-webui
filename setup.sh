@@ -76,6 +76,13 @@ if [ ! -f "${SCRIPT_DIR}/docker/docker-compose.yml" ]; then
 
   ok "All files downloaded"
   echo ""
+
+  # Authenticate Docker with GHCR (needed to pull the web UI image)
+  info "Authenticating Docker with GitHub Container Registry..."
+  echo "$(gh auth token)" | docker login ghcr.io -u "$(gh api user -q .login)" --password-stdin 2>/dev/null \
+    && ok "Docker authenticated with GHCR" \
+    || warn "Could not authenticate Docker with GHCR. You may need to run: echo \$(gh auth token) | docker login ghcr.io -u \$(gh api user -q .login) --password-stdin"
+  echo ""
 fi
 
 # ── Mode selection ───────────────────────────────────────────────────────────
