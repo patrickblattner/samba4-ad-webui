@@ -37,7 +37,6 @@ A complete AD test environment — includes a Samba4 Domain Controller, the Web 
 ```bash
 mkdir samba4-ad-webui && cd samba4-ad-webui
 gh api repos/patrickblattner/samba4-ad-webui/contents/setup.sh -q .content | base64 -d > setup.sh
-gh api repos/patrickblattner/samba4-ad-webui/contents/docker/docker-compose.yml -q .content | base64 -d > docker/docker-compose.yml
 bash setup.sh
 ```
 

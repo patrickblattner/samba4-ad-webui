@@ -32,6 +32,52 @@ if ! docker compose version >/dev/null 2>&1; then
   error "Docker Compose v2 is not available. Install it via: https://docs.docker.com/compose/install/"
 fi
 
+# ── Download project files ────────────────────────────────────────────────────
+
+REPO="patrickblattner/samba4-ad-webui"
+
+download_file() {
+  local remote_path="$1"
+  local local_path="$2"
+  local dir
+  dir="$(dirname "${local_path}")"
+  mkdir -p "${dir}"
+  info "Downloading ${remote_path}..."
+  gh api "repos/${REPO}/contents/${remote_path}" -q .content | base64 -d > "${local_path}" \
+    || error "Failed to download ${remote_path}"
+}
+
+# Check if we're running from a git clone (all files present) or standalone download
+if [ ! -f "${SCRIPT_DIR}/docker/docker-compose.yml" ]; then
+  info "Downloading Docker configuration files from GitHub..."
+
+  # Check gh is available and authenticated
+  command -v gh >/dev/null 2>&1 || error "GitHub CLI (gh) is required. Install: https://cli.github.com/"
+  gh auth status >/dev/null 2>&1 || error "GitHub CLI not authenticated. Run: gh auth login"
+
+  # Docker compose files
+  download_file "docker/docker-compose.yml" "${SCRIPT_DIR}/docker/docker-compose.yml"
+  download_file "docker/docker-compose.standalone.yml" "${SCRIPT_DIR}/docker/docker-compose.standalone.yml"
+
+  # Seed data
+  download_file "docker/seed/structure.ldif.template" "${SCRIPT_DIR}/docker/seed/structure.ldif.template"
+  download_file "docker/seed/groups.ldif.template" "${SCRIPT_DIR}/docker/seed/groups.ldif.template"
+  download_file "docker/seed/run-seed.sh" "${SCRIPT_DIR}/docker/seed/run-seed.sh"
+  chmod +x "${SCRIPT_DIR}/docker/seed/run-seed.sh"
+
+  # Teardown script
+  download_file "teardown.sh" "${SCRIPT_DIR}/teardown.sh"
+  chmod +x "${SCRIPT_DIR}/teardown.sh"
+
+  # Dockerfile and entrypoint (needed for local builds)
+  download_file "docker/Dockerfile" "${SCRIPT_DIR}/docker/Dockerfile"
+  download_file "docker/entrypoint.sh" "${SCRIPT_DIR}/docker/entrypoint.sh"
+  chmod +x "${SCRIPT_DIR}/docker/entrypoint.sh"
+
+  ok "All files downloaded"
+  echo ""
+fi
+
 # ── Mode selection ───────────────────────────────────────────────────────────
 
 echo ""
