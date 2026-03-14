@@ -8,12 +8,11 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### sAMAccountName editierbar machen + Validierung (#31)
-- sAMAccountName in Properties-Dialogen editierbar machen
-- Längenvalidierung: User 20, Group 256, Computer 15 Zeichen
-- Illegale Zeichen prüfen: " / \ [ ] : ; | = , + * ? < >
-- Validierung auch in Create-Dialogen
-- Fehlermeldung vor dem Speichern (Apply)
+### Setup-Skript und Production-Readiness (analog RAR) (#47)
+- [ ] `setup.sh` im Repo-Root — interaktiver Setup-Wizard
+- [ ] Express serviert Frontend-Dist in Production
+- [ ] Docker-Container unterstützt Self-signed SSL
+- [ ] `README.md` mit Installationsanleitung analog RAR
 
 ---
 
@@ -27,6 +26,22 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#46 fix: commit missing files that break CI Docker build](https://github.com/patrickblattner/samba4-ad-webui/issues/46)
+- [#45 Silent token refresh: auto-renew JWT before expiry](https://github.com/patrickblattner/samba4-ad-webui/issues/45)
+- [#44 Attribute Editor: schema-driven types, syntax-aware editing, system-only enforcement](https://github.com/patrickblattner/samba4-ad-webui/issues/44)
+- [#43 Attribute Editor: query attribute metadata from schema (isSingleValued)](https://github.com/patrickblattner/samba4-ad-webui/issues/43)
+- [#42 Attribute Editor: show all schema attributes including unset ones](https://github.com/patrickblattner/samba4-ad-webui/issues/42)
+- [#41 Docker build fails: tsconfig.tsbuildinfo tracked in git](https://github.com/patrickblattner/samba4-ad-webui/issues/41)
+- [#40 README.md erstellen](https://github.com/patrickblattner/samba4-ad-webui/issues/40)
+- [#39 GitHub Actions: Docker Image automatisch bauen und auf ghcr.io pushen](https://github.com/patrickblattner/samba4-ad-webui/issues/39)
+- [#38 Attribute Editor: filter out * and + entries, decode binary computed attributes](https://github.com/patrickblattner/samba4-ad-webui/issues/38)
+- [#37 Enter key should submit Create/action button in all modal forms](https://github.com/patrickblattner/samba4-ad-webui/issues/37)
+- [#36 Einheitliche Folder-Icons für alle OUs/Container im Tree](https://github.com/patrickblattner/samba4-ad-webui/issues/36)
+- [#35 [Security] Rate Limiting fehlt auf Write-API-Endpoints](https://github.com/patrickblattner/samba4-ad-webui/issues/35)
+- [#33 [Security] Keine Max-Length-Validierung in Zod-Schemas](https://github.com/patrickblattner/samba4-ad-webui/issues/33)
+- [#34 [Security] DN-Konstruktion ohne Escaping in Create/Move-Operationen](https://github.com/patrickblattner/samba4-ad-webui/issues/34)
+- [#32 [Security] TLS-Zertifikatvalidierung hardcoded deaktiviert](https://github.com/patrickblattner/samba4-ad-webui/issues/32)
+- [#31 sAMAccountName editierbar machen + Validierung](https://github.com/patrickblattner/samba4-ad-webui/issues/31)
 - [#29 [QA] Keine Service-Level Tests](https://github.com/patrickblattner/samba4-ad-webui/issues/29)
 - [#26 [QA] Pagination holt alle Objekte](https://github.com/patrickblattner/samba4-ad-webui/issues/26)
 - [#28 [QA] Attribute Keys ohne Allowlist](https://github.com/patrickblattner/samba4-ad-webui/issues/28)

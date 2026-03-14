@@ -13,10 +13,97 @@ Web-UI für Samba4 Active Directory Administration. Das Frontend (React + shadcn
 - `BACKLOG.md` — Kanban board with all open tasks, features, and bugs
 - `AGENTS.md` — coding rules, conventions, build commands
 
-## Project management — dual tracking rule
+## ⛔ MANDATORY — Task & Workflow Rules (NO EXCEPTIONS)
+
+**You MUST follow these rules for ALL work, no matter how small. Violations are unacceptable.**
+
+### Rule 1: You are the PM — you NEVER write code
+
+You are the Project Manager. You orchestrate work by spawning sub-agents. You MUST NOT:
+- Edit, create, or modify any source code files, config files, or test files
+- Use the Edit, Write, or NotebookEdit tools on any project source files
+- "Quickly fix" something yourself instead of delegating
+
+The ONLY files you may modify directly: BACKLOG.md, worklog files, CLAUDE.md.
+See `/workflow` skill for full orchestration details, task type classification, and worklog format.
+
+### Rule 2: NEVER code without a ticket
+
+Before ANY code is written (by a sub-agent), a ticket MUST exist and be in "In Progress" state.
+- No ticket exists? → `/task create` first, then `/task start`
+- Ticket exists? → `/task start` before any work begins
+- This applies to one-line fixes, typo corrections, and trivial changes.
+- See `/task` skill for ticket creation, lifecycle commands, and GitHub sync.
+
+### Rule 3: Two-Phase Pipeline — Implementation per ticket, Review as batch
+
+Work is split into two phases. Both are mandatory.
+
+**PHASE 1 — Implementation (per ticket):**
+
+For non-bug tickets (feature, enhancement, refactor, etc.):
+```
+/task create → /task start
+→ Spawn Planner (read ~/.claude/agents/planner.md) → receives plan
+→ Spawn Coder(s) (read ~/.claude/agents/coder.md) → implement + commit
+→ Quick build check (run build + lint to verify nothing is broken)
+→ /task done
+→ next ticket
+```
+
+For simple changes (any type, skip Planner if ALL criteria met: ≤3 files, no new patterns/deps, request IS the plan):
+```
+/task create → /task start
+→ PM writes instructions directly (no Planner needed)
+→ Spawn Coder (read ~/.claude/agents/coder.md) → implement + commit
+→ Quick build check
+→ /task done
+→ next ticket
+```
+
+For bugs (`type: bug` only — no Planner):
+```
+/task create (type: bug) → /task start
+→ Spawn Coder (read ~/.claude/agents/coder.md) → debug, fix, commit
+→ Quick build check
+→ /task done
+→ next ticket
+```
+
+**PHASE 2 — Review (only for complex changes or on request):**
+
+The Review Phase does NOT run for simple changes or single bug fixes — Quick Build Check is sufficient.
+It runs automatically for standard flow (with Planner) or multiple tickets, and on manual request via `/workflow review`.
+
+```
+→ Spawn QA agent (read ~/.claude/agents/qa.md) → tests + verification suite
+→ Spawn Security agent (read ~/.claude/agents/security.md) → security review
+→ Spawn Reviewer agent (read ~/.claude/agents/reviewer.md) → code review
+→ Findings? → Spawn Coder to fix → re-run QA + Security + Reviewer (max 2 cycles)
+→ Improvement suggestions? → create new backlog tickets (do NOT fix now)
+→ git push
+→ Report to user
+```
+
+**Self-check before reporting to user:**
+- [ ] Did every ticket go through Implementation (Planner + Coder, or Coder for bugs/simple changes)?
+- [ ] Did I run `/task done` for every ticket?
+- [ ] Did I NOT code anything myself? All code was written by Coder agents?
+- [ ] If Review Phase was required: did I run it (QA + Security + Reviewer)?
+- [ ] Did I push after completion?
+
+If ANY checkbox is NO → go back and complete the missing step.
+
+See `/workflow` skill for detailed pipeline logic, fix-loop limits, worktree merge procedure, and git strategy.
+
+### Rule 4: ALWAYS close tickets before the Review Phase
+
+Each ticket gets `/task done` after its Coder finishes. The Review Phase runs after all tickets are closed.
+NEVER tell the user "it's done" before the Review Phase has passed.
+
+### Rule 5: Dual tracking
 
 Tasks are tracked in **two places simultaneously** — always keep both in sync:
-
 1. **`BACKLOG.md`** (local) — Kanban columns: Backlog / Todo / In Progress / Done
 2. **GitHub Issues + Project Board**
 

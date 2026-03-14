@@ -13,6 +13,7 @@
   - Todo: `00a5db87`
   - In Progress: `9bb96b95`
   - Done: `e2f67afd`
+- **Closed field ID:** `PVTF_lAHOAKkNyM4BRpbjzg_cd68`
 
 ## Local Files
 - **Backlog file:** `BACKLOG.md`
@@ -21,5 +22,5 @@
 ## Labels
 - **Status:** `status: backlog`, `status: todo`, `status: in-progress`, `status: done`
 - **Type:** `type: bug`, `type: feature`, `type: enhancement`, `type: refactor`, `type: security`, `type: testing`, `type: docs`, `type: chore`
-- **Area:** _(add project-specific area labels here)_
+- **Area:** `area: frontend`, `area: backend`
 - **Priority:** `priority: critical`, `priority: high`, `priority: medium`, `priority: low`

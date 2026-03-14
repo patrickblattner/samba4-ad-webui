@@ -29,10 +29,14 @@ COPY --from=builder /app/client/dist/ client/dist/
 
 RUN npm ci --omit=dev
 
-# Serve client static files via Express in production
+RUN apk add --no-cache openssl
+
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 ENV NODE_ENV=production
 ENV PORT=3000
 
-EXPOSE 3000
+EXPOSE 3000 443
 
-CMD ["node", "server/dist/index.js"]
+ENTRYPOINT ["/app/entrypoint.sh"]
