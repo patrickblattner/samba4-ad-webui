@@ -21,6 +21,7 @@ import TelephonesTab from './tabs/TelephonesTab'
 import OrganizationTab from './tabs/OrganizationTab'
 import MemberOfTab from './tabs/MemberOfTab'
 import ObjectTab from '@/components/objects/ObjectTab'
+import SecurityTab from '@/components/security/SecurityTab'
 import AttributeEditorTab from '@/components/attributes/AttributeEditorTab'
 
 interface UserPropertiesDialogProps {
@@ -131,6 +132,7 @@ export default function UserPropertiesDialog({
                 <TabsTrigger value="organization">Organization</TabsTrigger>
                 <TabsTrigger value="memberOf">Member Of</TabsTrigger>
                 <TabsTrigger value="object">Object</TabsTrigger>
+                <TabsTrigger value="security">Security</TabsTrigger>
                 <TabsTrigger value="attributeEditor">Attribute Editor</TabsTrigger>
               </TabsList>
 
@@ -158,6 +160,9 @@ export default function UserPropertiesDialog({
                 </TabsContent>
                 <TabsContent value="object">
                   <ObjectTab dn={dn!} />
+                </TabsContent>
+                <TabsContent value="security">
+                  <SecurityTab dn={dn!} />
                 </TabsContent>
                 <TabsContent value="attributeEditor">
                   <AttributeEditorTab dn={dn!} />

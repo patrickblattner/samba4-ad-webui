@@ -18,6 +18,7 @@ import MembersTab from './tabs/MembersTab'
 import MemberOfTab from './tabs/MemberOfTab'
 import ManagedByTab from './tabs/ManagedByTab'
 import ObjectTab from '@/components/objects/ObjectTab'
+import SecurityTab from '@/components/security/SecurityTab'
 import AttributeEditorTab from '@/components/attributes/AttributeEditorTab'
 
 interface GroupPropertiesDialogProps {
@@ -181,6 +182,7 @@ export default function GroupPropertiesDialog({
                 <TabsTrigger value="memberOf">Member Of</TabsTrigger>
                 <TabsTrigger value="managedBy">Managed By</TabsTrigger>
                 <TabsTrigger value="object">Object</TabsTrigger>
+                <TabsTrigger value="security">Security</TabsTrigger>
                 <TabsTrigger value="attributeEditor">Attribute Editor</TabsTrigger>
               </TabsList>
 
@@ -215,6 +217,9 @@ export default function GroupPropertiesDialog({
                 </TabsContent>
                 <TabsContent value="object">
                   <ObjectTab dn={dn!} />
+                </TabsContent>
+                <TabsContent value="security">
+                  <SecurityTab dn={dn!} />
                 </TabsContent>
                 <TabsContent value="attributeEditor">
                   <AttributeEditorTab dn={dn!} />

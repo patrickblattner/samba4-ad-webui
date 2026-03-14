@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import OuGeneralTab from './tabs/OuGeneralTab'
 import ObjectTab from '@/components/objects/ObjectTab'
+import SecurityTab from '@/components/security/SecurityTab'
 import AttributeEditorTab from '@/components/attributes/AttributeEditorTab'
 
 interface OuPropertiesDialogProps {
@@ -113,6 +114,7 @@ export default function OuPropertiesDialog({
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="object">Object</TabsTrigger>
+                <TabsTrigger value="security">Security</TabsTrigger>
                 <TabsTrigger value="attributeEditor">Attribute Editor</TabsTrigger>
               </TabsList>
 
@@ -126,6 +128,9 @@ export default function OuPropertiesDialog({
                 </TabsContent>
                 <TabsContent value="object">
                   <ObjectTab dn={dn!} />
+                </TabsContent>
+                <TabsContent value="security">
+                  <SecurityTab dn={dn!} />
                 </TabsContent>
                 <TabsContent value="attributeEditor">
                   <AttributeEditorTab dn={dn!} />
