@@ -5,6 +5,14 @@ import { config } from '../config.js'
 // Module-level cache: sorted objectClass key -> attribute names
 const schemaCache = new Map<string, string[]>()
 
+// Cache for attribute metadata: lDAPDisplayName (lowercase) -> isSingleValued
+const attributeMetadataCache = new Map<string, boolean>()
+
+export interface AttributeMetadata {
+  name: string
+  isSingleValued: boolean
+}
+
 /**
  * Get all allowed attribute names for a set of objectClasses by querying the AD schema.
  * Results are cached per process (schema is the same for all users).
@@ -88,4 +96,61 @@ async function resolveClassAttributes(
   }
 
   return attributes
+}
+
+/**
+ * Get isSingleValued metadata for a list of attribute names.
+ * Queries attributeSchema objects from the schema partition.
+ * Results are cached globally (schema is the same for all users).
+ */
+export async function getAttributeMetadata(
+  client: Client,
+  attributeNames: string[],
+): Promise<Map<string, boolean>> {
+  const result = new Map<string, boolean>()
+  const uncached: string[] = []
+
+  // Check cache first
+  for (const name of attributeNames) {
+    const cached = attributeMetadataCache.get(name.toLowerCase())
+    if (cached !== undefined) {
+      result.set(name, cached)
+    } else {
+      uncached.push(name)
+    }
+  }
+
+  if (uncached.length === 0) return result
+
+  // Batch query: fetch all attributeSchema objects at once
+  const schemaDn = `CN=Schema,CN=Configuration,${config.ldap.baseDn}`
+
+  // Query all attributeSchema objects with isSingleValued
+  // We do a single broad search and filter client-side (more efficient than N individual searches)
+  const entries = await search(client, schemaDn, {
+    scope: 'sub',
+    filter: '(objectClass=attributeSchema)',
+    attributes: ['lDAPDisplayName', 'isSingleValued'],
+  })
+
+  // Build lookup from schema
+  const schemaLookup = new Map<string, boolean>()
+  for (const entry of entries) {
+    const raw = entry as unknown as Record<string, unknown>
+    const ldapName = raw['lDAPDisplayName']
+    const singleValued = raw['isSingleValued']
+    if (ldapName) {
+      const isSingle = String(singleValued).toUpperCase() === 'TRUE'
+      schemaLookup.set(String(ldapName).toLowerCase(), isSingle)
+    }
+  }
+
+  // Populate cache and results for uncached attributes
+  for (const name of uncached) {
+    const isSingle = schemaLookup.get(name.toLowerCase()) ?? true // default to single-valued if unknown
+    attributeMetadataCache.set(name.toLowerCase(), isSingle)
+    result.set(name, isSingle)
+  }
+
+  return result
 }
