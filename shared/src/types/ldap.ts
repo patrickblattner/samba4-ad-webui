@@ -3,6 +3,7 @@ export type LdapAttributeValue = string | string[] | Buffer | Buffer[]
 export interface LdapAttribute {
   name: string
   values: string[]
+  isSingleValued?: boolean
 }
 
 export interface LdapEntry {
