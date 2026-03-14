@@ -116,11 +116,13 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
     setIsSaving(true)
 
     try {
-      // Split by newlines for multi-valued attributes, filter empty lines
-      const newValues = editValue
-        .split('\n')
-        .map((v) => v.trim())
-        .filter((v) => v.length > 0)
+      const singleValued = selectedAttr?.isSingleValued ?? false
+      const newValues = singleValued
+        ? (editValue.trim() ? [editValue.trim()] : [])
+        : editValue
+            .split('\n')
+            .map((v) => v.trim())
+            .filter((v) => v.length > 0)
 
       const changes: AttributeChange[] = []
 
@@ -249,16 +251,31 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
           </DialogHeader>
 
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">
-              For multi-valued attributes, enter each value on a separate line.
-              Clear all values to delete the attribute.
-            </p>
-            <Textarea
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              rows={5}
-              className="font-mono text-sm"
-            />
+            {(selectedAttr?.isSingleValued ?? false) ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Clear the value to delete the attribute.
+                </p>
+                <Input
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="font-mono text-sm"
+                />
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  For multi-valued attributes, enter each value on a separate line.
+                  Clear all values to delete the attribute.
+                </p>
+                <Textarea
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  rows={5}
+                  className="font-mono text-sm"
+                />
+              </>
+            )}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
