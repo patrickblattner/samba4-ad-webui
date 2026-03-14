@@ -19,27 +19,42 @@ Lightweight web UI for managing a Samba4 Active Directory, modeled after Microso
 
 ### Prerequisites
 
-- Docker + Docker Compose
+- Docker + Docker Compose v2
 - Linux/macOS host (or WSL2 on Windows)
 - [GitHub CLI (`gh`)](https://cli.github.com/) -- for authenticating with the private repo and container registry
 
-### Setup
-
-No need to clone the repository. Run each step separately:
-
-**Step 1 -- Authenticate GitHub CLI** (one-time, interactive)
+### Authenticate (one-time)
 
 ```bash
 gh auth login
-```
-
-**Step 2 -- Authenticate Docker with the GitHub Container Registry**
-
-```bash
 echo $(gh auth token) | docker login ghcr.io -u $(gh api user -q .login) --password-stdin
 ```
 
-**Step 3 -- Download `setup.sh` and run the wizard**
+### Option 1: Combined Mode (DC + Web UI)
+
+A complete AD test environment — includes a Samba4 Domain Controller, the Web UI, and optional test data (users, groups, OUs). Ideal for development and testing.
+
+```bash
+mkdir samba4-ad-webui && cd samba4-ad-webui
+gh api repos/patrickblattner/samba4-ad-webui/contents/setup.sh -q .content | base64 -d > setup.sh
+gh api repos/patrickblattner/samba4-ad-webui/contents/docker/docker-compose.yml -q .content | base64 -d > docker/docker-compose.yml
+bash setup.sh
+```
+
+The wizard will ask for:
+
+- **Domain name** — e.g. `lab.dev`
+- **Admin password** — for the AD Administrator account
+- **Network binding** — internal only (127.0.0.1) or external (0.0.0.0)
+- **Test data** — optionally create sample users, groups, and OUs
+- **SSL mode** — `self-signed` (recommended) or `none`
+- **Port** — HTTPS (443) or HTTP (3000)
+
+Select **[1] Combined** when prompted.
+
+### Option 2: Standalone Mode (Web UI only)
+
+Connects to your existing Samba4 Domain Controller via LDAP/LDAPS.
 
 ```bash
 mkdir samba4-ad-webui && cd samba4-ad-webui
@@ -47,29 +62,34 @@ gh api repos/patrickblattner/samba4-ad-webui/contents/setup.sh -q .content | bas
 bash setup.sh
 ```
 
-**Step 4 -- Start the application**
+The wizard will ask for:
 
-```bash
-docker compose up -d
-```
+- **DC hostname/IP** — your Samba4 Domain Controller (e.g. `dc01.example.local`)
+- **LDAP Base DN** — e.g. `DC=example,DC=local`
+- **LDAP protocol** — LDAPS (recommended) or LDAP
+- **SSL mode** — `self-signed` (recommended) or `none`
+- **Port** — HTTPS (443) or HTTP (3000)
 
-The setup script creates `docker-compose.yml`, the `.env` file, and all required directories -- no additional downloads needed.
-
-The setup wizard will ask for:
-
-- **Samba4 DC Hostname** -- the domain controller to connect to (e.g. `dc01.example.local`)
-- **LDAP Base DN** -- the base DN for searches (e.g. `DC=example,DC=local`)
-- **LDAP Protocol** -- `LDAPS` (recommended) or `LDAP` (unencrypted)
-- **SSL mode** -- `self-signed` (recommended for internal use) or `none` (HTTP only)
-- **Port** -- HTTPS port (default `443`) or HTTP port (default `3000`)
-
-After the first start with self-signed SSL, the app generates a certificate automatically. Browsers will show a security warning -- add an exception or import `certs/server.crt` into your company CA.
+Select **[2] Standalone** when prompted.
 
 ### Updating
 
 ```bash
-docker compose pull
-docker compose up -d
+# Combined mode
+docker compose -f docker/docker-compose.yml pull
+docker compose -f docker/docker-compose.yml up -d
+
+# Standalone mode
+docker compose -f docker/docker-compose.standalone.yml pull
+docker compose -f docker/docker-compose.standalone.yml up -d
+```
+
+### Teardown
+
+Remove all containers, volumes, and generated configuration:
+
+```bash
+bash teardown.sh
 ```
 
 ### Auth Model
@@ -84,20 +104,25 @@ docker compose up -d
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `LDAP_URL` | LDAP connection URL | `ldap://localhost:389` |
-| `LDAPS_URL` | LDAPS connection URL | `ldaps://localhost:636` |
+| `DEPLOY_MODE` | Deployment mode (`combined` or `standalone`) | `combined` |
+| `LDAP_URL` | LDAP connection URL | `ldap://samba-ad:389` |
+| `LDAPS_URL` | LDAPS connection URL | `ldaps://samba-ad:636` |
 | `LDAP_BASE_DN` | Base DN for LDAP searches | `DC=lab,DC=dev` |
-| `LDAP_TLS_REJECT_UNAUTHORIZED` | Reject untrusted TLS certificates | `true` (production) |
+| `LDAP_TLS_REJECT_UNAUTHORIZED` | Reject untrusted TLS certificates | `false` |
 | `LDAP_CA_CERT_PATH` | Path to custom CA certificate (PEM) | -- |
 | `JWT_SECRET` | Secret for signing JWTs | -- (required) |
-| `JWT_EXPIRY` | JWT token expiry duration | `15m` |
+| `JWT_EXPIRY` | JWT token expiry duration | `8h` |
 | `CREDENTIAL_ENCRYPTION_KEY` | 32-byte hex key for credential encryption | -- (required) |
 | `SSL_MODE` | SSL mode for the web UI (`self-signed` or `none`) | `none` |
 | `SSL_DOMAIN` | Hostname for the self-signed certificate | -- |
-| `SSL_CERT_PATH` | Path to custom SSL certificate | `./certs/server.crt` |
-| `SSL_KEY_PATH` | Path to custom SSL key | `./certs/server.key` |
 | `APP_PORT` | External port (host-side) | `443` or `3000` |
 | `APP_INTERNAL_PORT` | Internal container port | `443` or `3000` |
+| `SAMBA_DOMAIN` | NetBIOS domain name (combined mode only) | `LAB` |
+| `SAMBA_REALM` | Kerberos realm (combined mode only) | `LAB.DEV` |
+| `SAMBA_REALM_LOWER` | Lowercase realm (combined mode only) | `lab.dev` |
+| `SAMBA_ADMIN_PASS` | AD admin password (combined mode only) | -- |
+| `BIND_IP` | Network bind address (combined mode only) | `127.0.0.1` |
+| `DNS_FORWARDER` | DNS forwarder for the DC (combined mode only) | `8.8.8.8` |
 | `RATE_LIMIT_WRITE_WINDOW_MS` | Rate limit window for write operations (ms) | `60000` |
 | `RATE_LIMIT_WRITE_MAX` | Max write operations per window | `30` |
 | `RATE_LIMIT_READ_WINDOW_MS` | Rate limit window for read operations (ms) | `60000` |
@@ -161,11 +186,11 @@ git clone https://github.com/patrickblattner/samba4-ad-webui.git
 cd samba4-ad-webui
 ```
 
-To build the Docker image locally instead of pulling it, uncomment the `build` section in `docker-compose.yml`:
+To build the Docker image locally instead of pulling it, uncomment the `build` section in the compose file:
 
 ```bash
-docker compose build
-docker compose up -d
+docker compose -f docker/docker-compose.yml build
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ## Tech Stack
