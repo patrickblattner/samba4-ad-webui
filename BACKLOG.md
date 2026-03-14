@@ -8,11 +8,6 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### Domain-Root-Knoten, System-Container-Kennzeichnung und kontextsensitives Context-Menü (#48)
-- [ ] Domain-Root-Knoten im Tree mit Rechtsklick → New OU
-- [ ] System-Container visuell unterscheiden (grau/muted)
-- [ ] Context-Menü kontextsensitiv (OUs vs Container vs Domain)
-
 ---
 
 ## Todo
@@ -25,6 +20,13 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#54 Integrate Samba4 DC into Docker Compose](https://github.com/patrickblattner/samba4-ad-webui/issues/54)
+- [#53 fix: Properties dialog tabs overflow — last tabs not visible](https://github.com/patrickblattner/samba4-ad-webui/issues/53)
+- [#52 fix: BerWriter import from asn1 fails at runtime](https://github.com/patrickblattner/samba4-ad-webui/issues/52)
+- [#51 Security-Tab in Properties-Dialogen (read-only, alle Objekttypen)](https://github.com/patrickblattner/samba4-ad-webui/issues/51)
+- [#50 Object-Tab in Properties-Dialogen (alle Objekttypen)](https://github.com/patrickblattner/samba4-ad-webui/issues/50)
+- [#49 OU Rename, Move & Properties im Kontextmenü](https://github.com/patrickblattner/samba4-ad-webui/issues/49)
+- [#48 Domain-Root-Knoten, System-Container-Kennzeichnung und kontextsensitives Context-Menü](https://github.com/patrickblattner/samba4-ad-webui/issues/48)
 - [#47 Setup-Skript und Production-Readiness (analog RAR)](https://github.com/patrickblattner/samba4-ad-webui/issues/47)
 - [#46 fix: commit missing files that break CI Docker build](https://github.com/patrickblattner/samba4-ad-webui/issues/46)
 - [#45 Silent token refresh: auto-renew JWT before expiry](https://github.com/patrickblattner/samba4-ad-webui/issues/45)

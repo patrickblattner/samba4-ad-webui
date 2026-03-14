@@ -172,31 +172,31 @@ fi
 echo ""
 echo -e "${CYAN}── SSL Mode (Web UI) ────────────────────${NC}"
 echo ""
-echo "  [1] Self-signed — auto-generated certificate (recommended for internal use)"
-echo "  [2] None        — HTTP only"
+echo "  [1] None        — HTTP only (no certificate)"
+echo "  [2] Self-signed — auto-generated certificate"
 echo ""
 read -rp "Selection [1]: " SSL_CHOICE
 SSL_CHOICE="${SSL_CHOICE:-1}"
 
 case "${SSL_CHOICE}" in
   1)
-    SSL_MODE="self-signed"
-    DEFAULT_PORT=443
-    INTERNAL_PORT=443
-    PROTOCOL="https"
-    ;;
-  2)
     SSL_MODE="none"
     DEFAULT_PORT=3000
     INTERNAL_PORT=3000
     PROTOCOL="http"
     ;;
-  *)
-    warn "Invalid selection, using self-signed."
+  2)
     SSL_MODE="self-signed"
     DEFAULT_PORT=443
     INTERNAL_PORT=443
     PROTOCOL="https"
+    ;;
+  *)
+    warn "Invalid selection, using none."
+    SSL_MODE="none"
+    DEFAULT_PORT=3000
+    INTERNAL_PORT=3000
+    PROTOCOL="http"
     ;;
 esac
 

@@ -47,8 +47,8 @@ The wizard will ask for:
 - **Admin password** — for the AD Administrator account
 - **Network binding** — internal only (127.0.0.1) or external (0.0.0.0)
 - **Test data** — optionally create sample users, groups, and OUs
-- **SSL mode** — `self-signed` (recommended) or `none`
-- **Port** — HTTPS (443) or HTTP (3000)
+- **SSL mode** — `none` (HTTP) or `self-signed` (HTTPS with auto-generated certificate)
+- **Port** — HTTP (3000) or HTTPS (443)
 
 Select **[1] Combined** when prompted.
 
@@ -67,8 +67,8 @@ The wizard will ask for:
 - **DC hostname/IP** — your Samba4 Domain Controller (e.g. `dc01.example.local`)
 - **LDAP Base DN** — e.g. `DC=example,DC=local`
 - **LDAP protocol** — LDAPS (recommended) or LDAP
-- **SSL mode** — `self-signed` (recommended) or `none`
-- **Port** — HTTPS (443) or HTTP (3000)
+- **SSL mode** — `none` (HTTP) or `self-signed` (HTTPS with auto-generated certificate)
+- **Port** — HTTP (3000) or HTTPS (443)
 
 Select **[2] Standalone** when prompted.
 
