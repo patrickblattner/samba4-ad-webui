@@ -5,7 +5,8 @@
  */
 
 import { Control } from 'ldapts'
-import { BerWriter } from 'asn1'
+import asn1 from 'asn1'
+const { BerWriter } = asn1
 
 // Access mask constants
 const DELETE = 0x00010000
@@ -39,7 +40,7 @@ export class SdFlagsControl extends Control {
     this.flags = flags
   }
 
-  writeControl(writer: BerWriter): void {
+  writeControl(writer: InstanceType<typeof BerWriter>): void {
     const ber = new BerWriter()
     ber.writeInt(this.flags)
     writer.writeBuffer(ber.buffer, 0x04)
