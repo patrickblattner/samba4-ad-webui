@@ -28,14 +28,14 @@ read -rp "Are you sure? [y/N]: " CONFIRM
 if [ -f "${SCRIPT_DIR}/docker/docker-compose.yml" ]; then
   info "Stopping containers (combined mode)..."
   cd "${SCRIPT_DIR}"
-  docker compose -f docker/docker-compose.yml --profile seed down -v 2>/dev/null || true
+  docker compose --env-file .env -f docker/docker-compose.yml --profile seed down -v 2>/dev/null || true
 fi
 
 # Stop and remove containers + volumes (standalone mode)
 if [ -f "${SCRIPT_DIR}/docker/docker-compose.standalone.yml" ]; then
   info "Stopping containers (standalone mode)..."
   cd "${SCRIPT_DIR}"
-  docker compose -f docker/docker-compose.standalone.yml down -v 2>/dev/null || true
+  docker compose --env-file .env -f docker/docker-compose.standalone.yml down -v 2>/dev/null || true
 fi
 
 # Remove .env

@@ -75,12 +75,12 @@ Select **[2] Standalone** when prompted.
 
 ```bash
 # Combined mode
-docker compose -f docker/docker-compose.yml pull
-docker compose -f docker/docker-compose.yml up -d
+docker compose --env-file .env -f docker/docker-compose.yml pull
+docker compose --env-file .env -f docker/docker-compose.yml up -d
 
 # Standalone mode
-docker compose -f docker/docker-compose.standalone.yml pull
-docker compose -f docker/docker-compose.standalone.yml up -d
+docker compose --env-file .env -f docker/docker-compose.standalone.yml pull
+docker compose --env-file .env -f docker/docker-compose.standalone.yml up -d
 ```
 
 ### Teardown
@@ -188,8 +188,8 @@ cd samba4-ad-webui
 To build the Docker image locally instead of pulling it, uncomment the `build` section in the compose file:
 
 ```bash
-docker compose -f docker/docker-compose.yml build
-docker compose -f docker/docker-compose.yml up -d
+docker compose --env-file .env -f docker/docker-compose.yml build
+docker compose --env-file .env -f docker/docker-compose.yml up -d
 ```
 
 ## Tech Stack

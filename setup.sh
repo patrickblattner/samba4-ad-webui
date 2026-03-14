@@ -116,8 +116,8 @@ if [ "${DEPLOY_MODE}" = "combined" ]; then
   echo -e "${CYAN}── Domain Configuration ──────────────────${NC}"
   echo ""
 
-  read -rp "Domain name (e.g. lab.dev): " DOMAIN_FQDN
-  [ -z "${DOMAIN_FQDN}" ] && error "Domain name is required."
+  read -rp "Domain name [lab.dev]: " DOMAIN_FQDN
+  DOMAIN_FQDN="${DOMAIN_FQDN:-lab.dev}"
 
   # Validate domain has exactly two parts
   IFS='.' read -ra DOMAIN_PARTS <<< "${DOMAIN_FQDN}"
@@ -336,9 +336,9 @@ if [[ ! "${START_NOW}" =~ ^[Yy]$ ]]; then
   echo ""
   ok "Setup complete. Start manually with:"
   if [ "${DEPLOY_MODE}" = "combined" ]; then
-    echo "    cd ${SCRIPT_DIR} && docker compose -f docker/docker-compose.yml up -d"
+    echo "    cd ${SCRIPT_DIR} && docker compose --env-file .env -f docker/docker-compose.yml up -d"
   else
-    echo "    cd ${SCRIPT_DIR} && docker compose -f docker/docker-compose.standalone.yml up -d"
+    echo "    cd ${SCRIPT_DIR} && docker compose --env-file .env -f docker/docker-compose.standalone.yml up -d"
   fi
   echo ""
   exit 0
@@ -351,7 +351,7 @@ cd "${SCRIPT_DIR}"
 if [ "${DEPLOY_MODE}" = "combined" ]; then
 
   info "Starting Samba AD DC..."
-  docker compose -f docker/docker-compose.yml up -d samba-ad
+  docker compose --env-file .env -f docker/docker-compose.yml up -d samba-ad
 
   info "Waiting for Samba AD to become healthy (this takes ~60-90s on first run)..."
   RETRIES=0
@@ -367,7 +367,7 @@ if [ "${DEPLOY_MODE}" = "combined" ]; then
 
   if [[ "${INSTALL_SEED}" =~ ^[Yy]$ ]]; then
     info "Running seed (creating test users and groups)..."
-    docker compose -f docker/docker-compose.yml --profile seed up -d ldap-seed
+    docker compose --env-file .env -f docker/docker-compose.yml --profile seed up -d ldap-seed
 
     # Wait for seed to complete
     RETRIES=0
@@ -389,13 +389,13 @@ if [ "${DEPLOY_MODE}" = "combined" ]; then
   fi
 
   info "Starting Web UI..."
-  docker compose -f docker/docker-compose.yml up -d app
+  docker compose --env-file .env -f docker/docker-compose.yml up -d app
   ok "Web UI started"
 
 else
 
   info "Starting Web UI (standalone)..."
-  docker compose -f docker/docker-compose.standalone.yml up -d
+  docker compose --env-file .env -f docker/docker-compose.standalone.yml up -d
   ok "Web UI started"
 
 fi
@@ -444,6 +444,6 @@ fi
 
 echo ""
 echo "  Teardown:  bash teardown.sh"
-echo "  Updating:  docker compose -f docker/docker-compose$([ "${DEPLOY_MODE}" = "standalone" ] && echo ".standalone").yml pull && \\"
-echo "             docker compose -f docker/docker-compose$([ "${DEPLOY_MODE}" = "standalone" ] && echo ".standalone").yml up -d"
+echo "  Updating:  docker compose --env-file .env -f docker/docker-compose$([ "${DEPLOY_MODE}" = "standalone" ] && echo ".standalone").yml pull && \\"
+echo "             docker compose --env-file .env -f docker/docker-compose$([ "${DEPLOY_MODE}" = "standalone" ] && echo ".standalone").yml up -d"
 echo ""
