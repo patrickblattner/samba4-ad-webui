@@ -130,6 +130,11 @@ export const updateOuSchema = z.object({
   description: z.string().max(1024, 'description must be at most 1024 characters').optional(),
 }).strict()
 
+// Objects
+export const protectionSchema = z.object({
+  protected: z.boolean(),
+})
+
 // Attributes
 export const updateAttributesSchema = z.object({
   changes: z.array(z.object({

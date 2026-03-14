@@ -1,7 +1,9 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
-import { listObjects } from '../services/objects.js'
+import { validateBody } from '../middleware/validate.js'
+import { protectionSchema } from '../schemas.js'
+import { listObjects, getObjectInfo, setObjectProtection } from '../services/objects.js'
 import { config } from '../config.js'
 
 const router = Router()
@@ -21,6 +23,52 @@ router.get('/', requireAuth, async (req, res, next) => {
 
     const result = await listObjects(authReq.credentials, baseDn, type, page, pageSize)
     res.json(result)
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * GET /api/objects/info?dn=<dn>
+ * Fetch object info for the Object tab.
+ */
+router.get('/info', requireAuth, async (req, res, next) => {
+  try {
+    const authReq = req as AuthenticatedRequest
+    const dn = req.query.dn as string
+
+    if (!dn) {
+      res.status(400).json({
+        error: { code: 'MISSING_DN', message: 'Query parameter "dn" is required' },
+      })
+      return
+    }
+
+    const info = await getObjectInfo(authReq.credentials, dn)
+    res.json(info)
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * POST /api/objects/protection?dn=<dn>
+ * Set or remove accidental deletion protection.
+ */
+router.post('/protection', requireAuth, validateBody(protectionSchema), async (req, res, next) => {
+  try {
+    const authReq = req as AuthenticatedRequest
+    const dn = req.query.dn as string
+
+    if (!dn) {
+      res.status(400).json({
+        error: { code: 'MISSING_DN', message: 'Query parameter "dn" is required' },
+      })
+      return
+    }
+
+    await setObjectProtection(authReq.credentials, dn, req.body.protected)
+    res.json({ success: true })
   } catch (err) {
     next(err)
   }
