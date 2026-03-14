@@ -3,7 +3,9 @@
 [![Build and Push Docker Image](https://github.com/patrickblattner/samba4-ad-webui/actions/workflows/docker.yml/badge.svg)](https://github.com/patrickblattner/samba4-ad-webui/actions/workflows/docker.yml)
 [![Docker Image](https://img.shields.io/badge/ghcr.io-patrickblattner%2Fsamba4--ad--webui-blue?logo=docker)](https://ghcr.io/patrickblattner/samba4-ad-webui)
 
-Web-based administration interface for Samba4 Active Directory, modeled after Microsoft RSAT "Active Directory Users and Computers" (ADUC).
+Lightweight web UI for managing a Samba4 Active Directory, modeled after Microsoft RSAT "Active Directory Users and Computers" (ADUC).
+
+**Not a full AD management suite.** This tool is designed for developers and teams who need a simple directory service for testing AD-like operations — without spinning up a Windows Server. Pair it with a Samba4 DC (runs on any Linux box or in Docker) and you get a familiar ADUC-style interface for managing test users, groups, and OUs.
 
 **What it manages:**
 
