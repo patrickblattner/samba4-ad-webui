@@ -1,4 +1,4 @@
-import type { ObjectSummary, ObjectInfo, PaginatedResponse } from '@samba-ad/shared'
+import type { ObjectSummary, ObjectInfo, PaginatedResponse, SecurityDescriptorInfo } from '@samba-ad/shared'
 import { apiGet, apiPost } from './client'
 
 export function listObjects(
@@ -20,4 +20,8 @@ export function getObjectInfo(dn: string): Promise<ObjectInfo> {
 
 export function setObjectProtection(dn: string, protect: boolean): Promise<void> {
   return apiPost(`/api/objects/protection?dn=${encodeURIComponent(dn)}`, { protected: protect })
+}
+
+export function getObjectSecurity(dn: string): Promise<SecurityDescriptorInfo> {
+  return apiGet<SecurityDescriptorInfo>(`/api/objects/security?dn=${encodeURIComponent(dn)}`)
 }
