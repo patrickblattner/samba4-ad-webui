@@ -8,6 +8,7 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { useDeleteUser, useEnableUser, useDisableUser, useMoveUser } from '@/hooks/useUserMutations'
 import { useDeleteGroup, useMoveGroup } from '@/hooks/useGroupMutations'
 import { useDeleteComputer, useMoveComputer } from '@/hooks/useComputerMutations'
+import { useMoveOu } from '@/hooks/useOuMutations'
 import {
   Table,
   TableBody,
@@ -27,6 +28,8 @@ import ComputerPropertiesDialog from '@/components/computers/ComputerPropertiesD
 import CreateComputerDialog from '@/components/computers/CreateComputerDialog'
 import CreateOuDialog from '@/components/ous/CreateOuDialog'
 import DeleteOuDialog from '@/components/ous/DeleteOuDialog'
+import RenameOuDialog from '@/components/ous/RenameOuDialog'
+import OuPropertiesDialog from '@/components/ous/OuPropertiesDialog'
 import ObjectContextMenu from '@/components/context-menus/ObjectContextMenu'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import MoveObjectDialog from '@/components/shared/MoveObjectDialog'
@@ -71,7 +74,7 @@ function extractNameFromDn(dn: string): string {
 
 export default function ObjectList() {
   const selectedNode = useDirectoryStore((s) => s.selectedNode)
-  const { activeDialog, closeDialog } = useDialogStore()
+  const { activeDialog, targetDn, targetName, closeDialog } = useDialogStore()
   const { data, isLoading, error } = useObjectList(selectedNode)
   const queryClient = useQueryClient()
 
@@ -96,6 +99,11 @@ export default function ObjectList() {
   // OU dialogs
   const [createOuOpen, setCreateOuOpen] = useState(false)
   const [deleteOuOpen, setDeleteOuOpen] = useState(false)
+  const [renameOuOpen, setRenameOuOpen] = useState(false)
+  const [moveOuOpen, setMoveOuOpen] = useState(false)
+  const [ouPropertiesOpen, setOuPropertiesOpen] = useState(false)
+  const [ouDn, setOuDn] = useState<string | null>(null)
+  const [ouName, setOuName] = useState<string>('')
 
   // React to dialog requests from tree context menu
   useEffect(() => {
@@ -116,9 +124,24 @@ export default function ObjectList() {
       case 'deleteOu':
         setDeleteOuOpen(true)
         break
+      case 'renameOu':
+        setOuDn(targetDn)
+        setOuName(targetName ?? '')
+        setRenameOuOpen(true)
+        break
+      case 'moveOu':
+        setOuDn(targetDn)
+        setOuName(targetName ?? '')
+        setMoveOuOpen(true)
+        break
+      case 'ouProperties':
+        setOuDn(targetDn)
+        setOuName(targetName ?? '')
+        setOuPropertiesOpen(true)
+        break
     }
     closeDialog()
-  }, [activeDialog, closeDialog])
+  }, [activeDialog, targetDn, targetName, closeDialog])
 
   // Confirm dialog
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -136,6 +159,7 @@ export default function ObjectList() {
   const moveUserMutation = useMoveUser()
   const moveGroupMutation = useMoveGroup()
   const moveComputerMutation = useMoveComputer()
+  const moveOuMutation = useMoveOu()
 
   const selectedObj = data?.data.find((o) => o.dn === selectedDn) ?? null
 
@@ -247,7 +271,8 @@ export default function ObjectList() {
         userPropertiesOpen || createUserOpen || passwordResetOpen ||
         groupPropertiesOpen || createGroupOpen ||
         computerPropertiesOpen || createComputerOpen ||
-        createOuOpen || deleteOuOpen || confirmOpen || moveOpen
+        createOuOpen || deleteOuOpen || renameOuOpen || moveOuOpen || ouPropertiesOpen ||
+        confirmOpen || moveOpen
       ) {
         return
       }
@@ -275,7 +300,8 @@ export default function ObjectList() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedObj, userPropertiesOpen, createUserOpen, passwordResetOpen,
       groupPropertiesOpen, createGroupOpen, computerPropertiesOpen,
-      createComputerOpen, createOuOpen, deleteOuOpen, confirmOpen, moveOpen])
+      createComputerOpen, createOuOpen, deleteOuOpen, renameOuOpen, moveOuOpen,
+      ouPropertiesOpen, confirmOpen, moveOpen])
 
   if (!selectedNode) {
     return (
@@ -285,7 +311,7 @@ export default function ObjectList() {
     )
   }
 
-  const isMovePending = moveUserMutation.isPending || moveGroupMutation.isPending || moveComputerMutation.isPending
+  const isMovePending = moveUserMutation.isPending || moveGroupMutation.isPending || moveComputerMutation.isPending || moveOuMutation.isPending
 
   return (
     <div className="flex h-full flex-col">
@@ -452,6 +478,28 @@ export default function ObjectList() {
         ouName={selectedNode ? extractNameFromDn(selectedNode) : ''}
         open={deleteOuOpen}
         onOpenChange={setDeleteOuOpen}
+      />
+
+      <RenameOuDialog
+        dn={ouDn}
+        currentName={ouName}
+        open={renameOuOpen}
+        onOpenChange={setRenameOuOpen}
+      />
+
+      <MoveObjectDialog
+        open={moveOuOpen}
+        onOpenChange={setMoveOuOpen}
+        objectName={ouName}
+        objectDn={ouDn ?? ''}
+        onMove={(targetOu) => moveOuMutation.mutateAsync({ dn: ouDn!, targetOu }).then(() => setMoveOuOpen(false))}
+        isPending={moveOuMutation.isPending}
+      />
+
+      <OuPropertiesDialog
+        dn={ouDn}
+        open={ouPropertiesOpen}
+        onOpenChange={setOuPropertiesOpen}
       />
     </div>
   )

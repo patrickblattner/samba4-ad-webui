@@ -69,6 +69,9 @@ function TreeNodeItem({ node, level }: TreeNodeItemProps) {
         onNewComputer={() => { selectNode(node.dn); openDialog('createComputer') }}
         onNewOu={() => { selectNode(node.dn); openDialog('createOu') }}
         onDeleteOu={() => { selectNode(node.dn); openDialog('deleteOu') }}
+        onRename={() => { selectNode(node.dn); openDialog('renameOu', { dn: node.dn, name: node.name }) }}
+        onMove={() => { selectNode(node.dn); openDialog('moveOu', { dn: node.dn, name: node.name }) }}
+        onProperties={() => { selectNode(node.dn); openDialog('ouProperties', { dn: node.dn, name: node.name }) }}
         onRefresh={handleRefresh}
       >
         <div

@@ -8,6 +8,8 @@ import {
   Trash2,
   RefreshCw,
   Settings,
+  Pencil,
+  FolderInput,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -27,6 +29,8 @@ interface TreeContextMenuProps {
   onNewOu: () => void
   onDeleteOu: () => void
   onRefresh: () => void
+  onRename?: () => void
+  onMove?: () => void
   onProperties?: () => void
 }
 
@@ -39,6 +43,8 @@ export default function TreeContextMenu({
   onNewOu,
   onDeleteOu,
   onRefresh,
+  onRename,
+  onMove,
   onProperties,
 }: TreeContextMenuProps) {
   const isOu = nodeType === 'ou'
@@ -71,6 +77,25 @@ export default function TreeContextMenu({
             New OU
           </ContextMenuItem>
         )}
+
+        {isOu && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem onClick={onRename}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Rename
+            </ContextMenuItem>
+            <ContextMenuItem onClick={onMove}>
+              <FolderInput className="mr-2 h-4 w-4" />
+              Move...
+            </ContextMenuItem>
+            <ContextMenuItem onClick={onProperties}>
+              <Settings className="mr-2 h-4 w-4" />
+              Properties
+            </ContextMenuItem>
+          </>
+        )}
+
         {isOu && (
           <>
             <ContextMenuSeparator />
@@ -80,21 +105,13 @@ export default function TreeContextMenu({
             </ContextMenuItem>
           </>
         )}
+
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onRefresh}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
           <ContextMenuShortcut>F5</ContextMenuShortcut>
         </ContextMenuItem>
-        {onProperties && (
-          <>
-            <ContextMenuSeparator />
-            <ContextMenuItem onClick={onProperties}>
-              <Settings className="mr-2 h-4 w-4" />
-              Properties
-            </ContextMenuItem>
-          </>
-        )}
       </ContextMenuContent>
     </ContextMenu>
   )
