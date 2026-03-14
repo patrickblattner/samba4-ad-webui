@@ -32,7 +32,7 @@ echo "Samba AD is reachable — starting seed"
 # Already seeded? Check if OU=Dev exists
 EXISTING=$(ldapsearch -x -H "${LDAP_URI}" \
   -D "${BIND_DN}" -w "${BIND_PW}" \
-  -b "${DOMAIN_DC}" "(ou=Dev)" dn 2>/dev/null | grep "dn:" | wc -l)
+  -b "${DOMAIN_DC}" "(ou=Dev)" dn 2>/dev/null | grep -c "dn:" || true)
 
 if [ "${EXISTING}" -gt "0" ]; then
   echo "Test data already exists — skipping seed"
