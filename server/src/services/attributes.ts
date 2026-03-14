@@ -1,7 +1,7 @@
 import { Attribute, Change } from 'ldapts'
 import type { LdapAttribute, AttributeChange } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
-import { getSchemaAttributes, getAttributeMetadata } from './schema.js'
+import { getSchemaAttributes, getAttributeMetadata, isAttributeReadOnly } from './schema.js'
 import { config } from '../config.js'
 import { type Credentials } from '../utils/ldapHelpers.js'
 
@@ -143,13 +143,15 @@ export const getAttributes = async (
       }
     }
 
-    // Get isSingleValued metadata for all attributes
+    // Get full attribute metadata (syntax, singleValued, readOnly)
     const allAttrNames = attributes.map(a => a.name)
     const metadata = await getAttributeMetadata(client, allAttrNames)
     for (const attr of attributes) {
-      const isSingle = metadata.get(attr.name)
-      if (isSingle !== undefined) {
-        attr.isSingleValued = isSingle
+      const meta = metadata.get(attr.name)
+      if (meta) {
+        attr.isSingleValued = meta.isSingleValued
+        attr.syntax = meta.syntax
+        attr.isReadOnly = isAttributeReadOnly(meta)
       }
     }
 
