@@ -26,3 +26,13 @@ export interface ObjectSummary {
   description?: string
   enabled?: boolean
 }
+
+export interface ObjectInfo {
+  canonicalName: string
+  objectClass: string
+  whenCreated: string
+  whenChanged: string
+  uSNCreated: string
+  uSNChanged: string
+  isProtected: boolean
+}
