@@ -1,0 +1,26 @@
+name: samba4-ad-webui
+
+services:
+  # -----------------------------------------------
+  # Web UI — Samba4 AD Administration (standalone)
+  # Connects to an existing Samba4 DC via LDAP
+  # -----------------------------------------------
+  app:
+    container_name: samba4-ad-webui
+    image: ghcr.io/patrickblattner/samba4-ad-webui:latest
+    # Uncomment to build locally:
+    # build:
+    #   context: ..
+    #   dockerfile: docker/Dockerfile
+    env_file: ../.env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${APP_PORT:-3000}:${APP_INTERNAL_PORT:-3000}"
+    volumes:
+      - certs:/app/certs
+    restart: unless-stopped
+
+volumes:
+  certs:
