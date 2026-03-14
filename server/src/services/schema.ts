@@ -1,16 +1,57 @@
 import { Client } from 'ldapts'
+import type { AttributeSyntaxType } from '@samba-ad/shared'
 import { search } from './ldap.js'
 import { config } from '../config.js'
 
 // Module-level cache: sorted objectClass key -> attribute names
 const schemaCache = new Map<string, string[]>()
 
-// Cache for attribute metadata: lDAPDisplayName (lowercase) -> isSingleValued
-const attributeMetadataCache = new Map<string, boolean>()
-
-export interface AttributeMetadata {
-  name: string
+export interface FullAttributeMetadata {
   isSingleValued: boolean
+  syntax: AttributeSyntaxType
+  isSystemOnly: boolean
+  isConstructed: boolean
+}
+
+// Cache for attribute metadata: lDAPDisplayName (lowercase) -> FullAttributeMetadata
+const attributeMetadataCache = new Map<string, FullAttributeMetadata>()
+
+/** Non-editable syntax types */
+const NON_EDITABLE_SYNTAXES = new Set<AttributeSyntaxType>([
+  'securityDescriptor', 'sid', 'dnBinary',
+])
+
+/** Map attributeSyntax OID + oMSyntax to our syntax type */
+function resolveAttributeSyntax(attributeSyntax: string, oMSyntax: number): AttributeSyntaxType {
+  // For oMSyntax 127, the OID distinguishes the subtypes
+  if (oMSyntax === 127) {
+    if (attributeSyntax === '2.5.5.1') return 'dn'
+    if (attributeSyntax === '2.5.5.7') return 'dnBinary'
+    if (attributeSyntax === '2.5.5.14') return 'dnString'
+    return 'dn' // fallback for unknown 127 variants
+  }
+
+  const key = `${attributeSyntax}|${oMSyntax}`
+  const map: Record<string, AttributeSyntaxType> = {
+    '2.5.5.12|64': 'string',       // Unicode String
+    '2.5.5.4|20': 'string',        // Case-Insensitive String
+    '2.5.5.5|19': 'string',        // Printable String
+    '2.5.5.5|22': 'string',        // IA5 String
+    '2.5.5.6|18': 'numericString', // Numeric String
+    '2.5.5.9|2': 'integer',        // Integer
+    '2.5.5.16|65': 'largeInteger', // Large Integer (Int8)
+    '2.5.5.8|1': 'boolean',        // Boolean
+    '2.5.5.10|4': 'octetString',   // Octet String
+    '2.5.5.15|66': 'securityDescriptor', // NT Security Descriptor
+    '2.5.5.11|23': 'generalizedTime',   // Generalized Time
+    '2.5.5.11|24': 'generalizedTime',   // UTC Time
+    '2.5.5.17|4': 'sid',           // SID
+  }
+  return map[key] ?? 'string'
+}
+
+export function isAttributeReadOnly(meta: FullAttributeMetadata): boolean {
+  return meta.isSystemOnly || meta.isConstructed || NON_EDITABLE_SYNTAXES.has(meta.syntax)
 }
 
 /**
@@ -99,15 +140,15 @@ async function resolveClassAttributes(
 }
 
 /**
- * Get isSingleValued metadata for a list of attribute names.
+ * Get full attribute metadata for a list of attribute names.
  * Queries attributeSchema objects from the schema partition.
  * Results are cached globally (schema is the same for all users).
  */
 export async function getAttributeMetadata(
   client: Client,
   attributeNames: string[],
-): Promise<Map<string, boolean>> {
-  const result = new Map<string, boolean>()
+): Promise<Map<string, FullAttributeMetadata>> {
+  const result = new Map<string, FullAttributeMetadata>()
   const uncached: string[] = []
 
   // Check cache first
@@ -125,31 +166,39 @@ export async function getAttributeMetadata(
   // Batch query: fetch all attributeSchema objects at once
   const schemaDn = `CN=Schema,CN=Configuration,${config.ldap.baseDn}`
 
-  // Query all attributeSchema objects with isSingleValued
+  // Query all attributeSchema objects with full metadata
   // We do a single broad search and filter client-side (more efficient than N individual searches)
   const entries = await search(client, schemaDn, {
     scope: 'sub',
     filter: '(objectClass=attributeSchema)',
-    attributes: ['lDAPDisplayName', 'isSingleValued'],
+    attributes: ['lDAPDisplayName', 'isSingleValued', 'attributeSyntax', 'oMSyntax', 'systemOnly', 'searchFlags'],
   })
 
   // Build lookup from schema
-  const schemaLookup = new Map<string, boolean>()
+  const schemaLookup = new Map<string, FullAttributeMetadata>()
   for (const entry of entries) {
     const raw = entry as unknown as Record<string, unknown>
     const ldapName = raw['lDAPDisplayName']
-    const singleValued = raw['isSingleValued']
-    if (ldapName) {
-      const isSingle = String(singleValued).toUpperCase() === 'TRUE'
-      schemaLookup.set(String(ldapName).toLowerCase(), isSingle)
-    }
+    if (!ldapName) continue
+
+    const isSingle = String(raw['isSingleValued']).toUpperCase() === 'TRUE'
+    const attrSyntaxOid = String(raw['attributeSyntax'] ?? '2.5.5.12')
+    const omSyntax = parseInt(String(raw['oMSyntax'] ?? '64'), 10) || 64
+    const systemOnly = String(raw['systemOnly']).toUpperCase() === 'TRUE'
+    const searchFlagsVal = parseInt(String(raw['searchFlags'] ?? '0'), 10) || 0
+    const isConstructed = (searchFlagsVal & 0x10) !== 0
+
+    const syntax = resolveAttributeSyntax(attrSyntaxOid, omSyntax)
+    const meta: FullAttributeMetadata = { isSingleValued: isSingle, syntax, isSystemOnly: systemOnly, isConstructed }
+    schemaLookup.set(String(ldapName).toLowerCase(), meta)
   }
 
   // Populate cache and results for uncached attributes
+  const defaultMeta: FullAttributeMetadata = { isSingleValued: true, syntax: 'string', isSystemOnly: false, isConstructed: false }
   for (const name of uncached) {
-    const isSingle = schemaLookup.get(name.toLowerCase()) ?? true // default to single-valued if unknown
-    attributeMetadataCache.set(name.toLowerCase(), isSingle)
-    result.set(name, isSingle)
+    const meta = schemaLookup.get(name.toLowerCase()) ?? defaultMeta
+    attributeMetadataCache.set(name.toLowerCase(), meta)
+    result.set(name, meta)
   }
 
   return result
