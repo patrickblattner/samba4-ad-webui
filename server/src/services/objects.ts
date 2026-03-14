@@ -1,5 +1,5 @@
 import { Attribute, Change } from 'ldapts'
-import type { ObjectSummary, ObjectInfo, PaginatedResponse } from '@samba-ad/shared'
+import type { ObjectSummary, ObjectInfo, PaginatedResponse, SecurityDescriptorInfo, AceEntry } from '@samba-ad/shared'
 import { createBoundClient, search, unbind } from './ldap.js'
 import { config } from '../config.js'
 import { extractCn, splitDnComponents, getParentDn } from '../utils/dnUtils.js'
@@ -12,6 +12,12 @@ import {
   removeProtectionAces,
   addChildProtectionAce,
   removeChildProtectionAce,
+  parseSecurityDescriptorFull,
+  parseSid,
+  accessMaskToRights,
+  aceFlagsToAppliesTo,
+  resolveWellKnownSid,
+  sidStringToBytes,
 } from '../utils/securityDescriptor.js'
 
 /**
@@ -253,6 +259,140 @@ export const setObjectProtection = async (
     wrappedErr.statusCode = 400
     wrappedErr.code = 'PROTECTION_SET_FAILED'
     throw wrappedErr
+  } finally {
+    await unbind(client)
+  }
+}
+
+/**
+ * Fetch the security descriptor for an object (read-only Security tab).
+ * Resolves SIDs to display names via well-known SID table and LDAP lookup.
+ */
+export const getObjectSecurity = async (
+  credentials: Credentials,
+  dn: string,
+): Promise<SecurityDescriptorInfo> => {
+  const client = await createBoundClient(config.ldap.url, credentials.dn, credentials.password)
+  try {
+    // Fetch nTSecurityDescriptor with OWNER (1) + DACL (4) = 5
+    const sdControl = new SdFlagsControl(5)
+    const entries = await search(client, dn, {
+      scope: 'base',
+      filter: '(objectClass=*)',
+      attributes: ['nTSecurityDescriptor'],
+      explicitBufferAttributes: ['nTSecurityDescriptor'],
+    }, sdControl)
+
+    if (entries.length === 0) {
+      const err = new Error(`Object not found: ${dn}`) as Error & { statusCode: number; code: string }
+      err.statusCode = 404
+      err.code = 'OBJECT_NOT_FOUND'
+      throw err
+    }
+
+    const entry = entries[0] as unknown as Record<string, unknown>
+    const sdValue = entry['nTSecurityDescriptor']
+    if (!(sdValue instanceof Buffer)) {
+      const err = new Error('Could not read security descriptor') as Error & { statusCode: number; code: string }
+      err.statusCode = 500
+      err.code = 'SD_READ_FAILED'
+      throw err
+    }
+
+    const sd = parseSecurityDescriptorFull(sdValue)
+
+    // Collect all unique SIDs that need resolution
+    const allSids = new Set<string>()
+    if (sd.ownerSid) allSids.add(sd.ownerSid)
+    for (const ace of sd.aces) {
+      if (ace.sid) allSids.add(ace.sid)
+    }
+
+    // Resolve SIDs: first try well-known, then LDAP
+    const sidToName = new Map<string, string>()
+    const unresolvedSids: string[] = []
+
+    for (const sid of allSids) {
+      const name = resolveWellKnownSid(sid)
+      if (name) {
+        sidToName.set(sid, name)
+      } else {
+        unresolvedSids.push(sid)
+      }
+    }
+
+    // Build domain prefix from baseDN (first DC component uppercased)
+    const dcMatch = config.ldap.baseDn.match(/DC=([^,]+)/i)
+    const domainPrefix = dcMatch ? dcMatch[1].toUpperCase() : 'DOMAIN'
+
+    // Resolve remaining SIDs via LDAP batch lookup
+    if (unresolvedSids.length > 0) {
+      const sidFilters = unresolvedSids.map(sid => {
+        const sidBytes = sidStringToBytes(sid)
+        const escaped = Array.from(sidBytes).map(b => `\\${b.toString(16).padStart(2, '0')}`).join('')
+        return `(objectSid=${escaped})`
+      })
+      const filter = sidFilters.length === 1 ? sidFilters[0] : `(|${sidFilters.join('')})`
+
+      try {
+        const resolved = await search(client, config.ldap.baseDn, {
+          scope: 'sub',
+          filter,
+          attributes: ['sAMAccountName', 'objectSid'],
+          explicitBufferAttributes: ['objectSid'],
+          sizeLimit: unresolvedSids.length,
+        })
+
+        for (const resolvedEntry of resolved) {
+          const re = resolvedEntry as unknown as Record<string, unknown>
+          const objectSid = re['objectSid']
+          if (objectSid instanceof Buffer) {
+            const { sid: resolvedSid } = parseSid(objectSid, 0)
+            const samName = re['sAMAccountName'] as string
+            if (samName) {
+              sidToName.set(resolvedSid, `${domainPrefix}\\${samName}`)
+            }
+          }
+        }
+      } catch {
+        // If LDAP lookup fails, we'll just show the SID string
+      }
+    }
+
+    // Build parent DN for inherited ACEs
+    const parentDn = getParentDn(dn)
+
+    // Compute isInheritanceEnabled: SE_DACL_PROTECTED = 0x1000
+    const isInheritanceEnabled = !(sd.controlFlags & 0x1000)
+
+    // Resolve owner
+    const ownerName = sidToName.get(sd.ownerSid) || sd.ownerSid
+
+    // Build ACE entries
+    const dacl: AceEntry[] = sd.aces.map(ace => {
+      const isAllow = ace.type === 0x00 || ace.type === 0x05
+      const isInherited = !!(ace.flags & 0x10)
+
+      return {
+        type: isAllow ? 'allow' : 'deny',
+        principalName: sidToName.get(ace.sid) || ace.sid,
+        principalSid: ace.sid,
+        accessMask: ace.accessMask,
+        rights: accessMaskToRights(ace.accessMask),
+        objectType: ace.objectType,
+        inheritedObjectType: ace.inheritedObjectType,
+        isInherited,
+        inheritedFrom: isInherited ? parentDn : '<not inherited>',
+        appliesTo: aceFlagsToAppliesTo(ace.flags),
+        aceFlags: ace.flags,
+      }
+    })
+
+    return {
+      owner: { name: ownerName, sid: sd.ownerSid },
+      dacl,
+      isInheritanceEnabled,
+    }
   } finally {
     await unbind(client)
   }

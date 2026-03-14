@@ -3,7 +3,7 @@ import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
 import { protectionSchema } from '../schemas.js'
-import { listObjects, getObjectInfo, setObjectProtection } from '../services/objects.js'
+import { listObjects, getObjectInfo, setObjectProtection, getObjectSecurity } from '../services/objects.js'
 import { config } from '../config.js'
 
 const router = Router()
@@ -46,6 +46,29 @@ router.get('/info', requireAuth, async (req, res, next) => {
 
     const info = await getObjectInfo(authReq.credentials, dn)
     res.json(info)
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * GET /api/objects/security?dn=<dn>
+ * Fetch security descriptor for the Security tab.
+ */
+router.get('/security', requireAuth, async (req, res, next) => {
+  try {
+    const authReq = req as AuthenticatedRequest
+    const dn = req.query.dn as string
+
+    if (!dn) {
+      res.status(400).json({
+        error: { code: 'MISSING_DN', message: 'Query parameter "dn" is required' },
+      })
+      return
+    }
+
+    const security = await getObjectSecurity(authReq.credentials, dn)
+    res.json(security)
   } catch (err) {
     next(err)
   }
