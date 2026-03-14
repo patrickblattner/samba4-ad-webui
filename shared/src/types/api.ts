@@ -36,3 +36,28 @@ export interface ObjectInfo {
   uSNChanged: string
   isProtected: boolean
 }
+
+export interface SecurityPrincipal {
+  name: string
+  sid: string
+}
+
+export interface AceEntry {
+  type: 'allow' | 'deny'
+  principalName: string
+  principalSid: string
+  accessMask: number
+  rights: string[]
+  objectType: string | null
+  inheritedObjectType: string | null
+  isInherited: boolean
+  inheritedFrom: string
+  appliesTo: string
+  aceFlags: number
+}
+
+export interface SecurityDescriptorInfo {
+  owner: SecurityPrincipal
+  dacl: AceEntry[]
+  isInheritanceEnabled: boolean
+}
