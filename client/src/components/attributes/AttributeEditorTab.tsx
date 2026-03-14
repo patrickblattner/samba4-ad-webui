@@ -17,6 +17,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -27,43 +34,21 @@ interface AttributeEditorTabProps {
   dn: string
 }
 
-/** Attributes that should not be edited (DC-controlled / system attributes) */
-const READ_ONLY_ATTRIBUTES = new Set([
-  // Identity / system
-  'objectGUID',
-  'objectSid',
-  'distinguishedName',
-  'name',
-  'cn',
-  'objectClass',
-  'objectCategory',
-  'instanceType',
-  'sAMAccountType',
-  // Timestamps (DC-managed)
-  'whenCreated',
-  'whenChanged',
-  'createTimeStamp',
-  'modifyTimeStamp',
-  // Replication metadata
-  'uSNCreated',
-  'uSNChanged',
-  // Schema
-  'subSchemaSubEntry',
-  'structuralObjectClass',
-  'subschemaSubentry',
-  // Computed
-  'dscoremorphcount',
-  'sDRightsEffective',
-  'msDS-User-Account-Control-Computed',
-  'isCriticalSystemObject',
-  // Operational that are DC-controlled
-  'lastLogon',
-  'lastLogonTimestamp',
-  'lastLogoff',
-  'logonCount',
-  'badPasswordTime',
-  'badPwdCount',
-])
+function formatGeneralizedTime(value: string): string {
+  // LDAP format: YYYYMMDDHHMMSS.0Z or similar
+  const match = value.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/)
+  if (!match) return value
+  const [, y, m, d, h, min, s] = match
+  return `${y}-${m}-${d} ${h}:${min}:${s} UTC`
+}
+
+function formatDisplayValue(attr: LdapAttribute): string {
+  if (attr.values.length === 0) return '<not set>'
+  if (attr.syntax === 'generalizedTime' && attr.values.length === 1) {
+    return formatGeneralizedTime(attr.values[0])
+  }
+  return attr.values.join('; ')
+}
 
 export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
   const queryClient = useQueryClient()
@@ -102,9 +87,12 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
 
   function handleEditClick() {
     if (!selectedAttr) return
-    const isBinary = selectedAttr.values.length === 1 && selectedAttr.values[0] === '<Binary>'
-    if (isBinary) return
-    if (READ_ONLY_ATTRIBUTES.has(selectedAttr.name)) return
+    const isReadOnly = selectedAttr.isReadOnly ?? false
+    const isBinarySyntax = selectedAttr.syntax === 'octetString'
+      || selectedAttr.syntax === 'securityDescriptor'
+      || selectedAttr.syntax === 'sid'
+      || selectedAttr.syntax === 'dnBinary'
+    if (isBinarySyntax || isReadOnly) return
 
     // For multi-valued attributes, join with newlines for editing
     setEditValue(selectedAttr.values.join('\n'))
@@ -114,15 +102,24 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
   async function handleSave() {
     if (!selectedAttr) return
     setIsSaving(true)
+    const singleValued = selectedAttr.isSingleValued ?? false
+    const syntax = selectedAttr.syntax ?? 'string'
 
     try {
-      const singleValued = selectedAttr?.isSingleValued ?? false
-      const newValues = singleValued
-        ? (editValue.trim() ? [editValue.trim()] : [])
-        : editValue
-            .split('\n')
-            .map((v) => v.trim())
-            .filter((v) => v.length > 0)
+      let newValues: string[]
+
+      if (syntax === 'boolean') {
+        newValues = editValue ? [editValue] : []
+      } else if (syntax === 'integer' || syntax === 'largeInteger' || syntax === 'numericString') {
+        newValues = editValue.trim() ? [editValue.trim()] : []
+      } else if (singleValued) {
+        newValues = editValue.trim() ? [editValue.trim()] : []
+      } else {
+        newValues = editValue
+          .split('\n')
+          .map((v) => v.trim())
+          .filter((v) => v.length > 0)
+      }
 
       const changes: AttributeChange[] = []
 
@@ -151,8 +148,10 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
         })
       }
 
-      await updateAttributes(dn, changes)
-      await queryClient.invalidateQueries({ queryKey: ['attributes', dn] })
+      if (changes.length > 0) {
+        await updateAttributes(dn, changes)
+        await queryClient.invalidateQueries({ queryKey: ['attributes', dn] })
+      }
       setEditOpen(false)
     } catch (err) {
       console.error('Failed to update attribute:', err)
@@ -161,8 +160,11 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
     }
   }
 
-  const isBinary = selectedAttr?.values.length === 1 && selectedAttr.values[0] === '<Binary>'
-  const isReadOnly = selectedAttr ? READ_ONLY_ATTRIBUTES.has(selectedAttr.name) : false
+  const isBinarySyntax = selectedAttr?.syntax === 'octetString'
+    || selectedAttr?.syntax === 'securityDescriptor'
+    || selectedAttr?.syntax === 'sid'
+    || selectedAttr?.syntax === 'dnBinary'
+  const isReadOnly = selectedAttr?.isReadOnly ?? false
 
   if (isLoading) {
     return (
@@ -180,6 +182,9 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
       </div>
     )
   }
+
+  const syntax = selectedAttr?.syntax ?? 'string'
+  const singleValued = selectedAttr?.isSingleValued ?? false
 
   return (
     <div className="space-y-3 py-4">
@@ -203,7 +208,7 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
           <TableBody>
             {filteredAttributes.map((attr) => {
               const isNotSet = attr.values.length === 0
-              const displayValue = isNotSet ? '<not set>' : attr.values.join('; ')
+              const displayValue = formatDisplayValue(attr)
               return (
                 <TableRow
                   key={attr.name}
@@ -234,7 +239,7 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
         <Button
           variant="outline"
           size="sm"
-          disabled={!selectedAttr || isBinary || isReadOnly}
+          disabled={!selectedAttr || isBinarySyntax || isReadOnly}
           onClick={handleEditClick}
         >
           Edit
@@ -251,7 +256,99 @@ export default function AttributeEditorTab({ dn }: AttributeEditorTabProps) {
           </DialogHeader>
 
           <div className="space-y-2">
-            {(selectedAttr?.isSingleValued ?? false) ? (
+            {syntax === 'boolean' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Select a boolean value, or clear to delete the attribute.
+                </p>
+                <Select value={editValue} onValueChange={setEditValue}>
+                  <SelectTrigger className="font-mono text-sm">
+                    <SelectValue placeholder="(not set)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRUE">TRUE</SelectItem>
+                    <SelectItem value="FALSE">FALSE</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editValue && (
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => setEditValue('')}>
+                    Clear value
+                  </Button>
+                )}
+              </>
+            ) : syntax === 'integer' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Enter an integer value. Clear to delete the attribute.
+                </p>
+                <Input
+                  type="number"
+                  step={1}
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="font-mono text-sm"
+                />
+              </>
+            ) : syntax === 'largeInteger' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Enter a large integer value (64-bit). Clear to delete the attribute.
+                </p>
+                <Input
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="font-mono text-sm"
+                  pattern="[0-9-]*"
+                />
+              </>
+            ) : syntax === 'dn' || syntax === 'dnString' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  {singleValued ? 'Enter a distinguished name.' : 'Enter each DN on a separate line.'}
+                  {' '}Clear to delete the attribute.
+                </p>
+                {singleValued ? (
+                  <Input
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="font-mono text-sm"
+                    placeholder="CN=...,DC=..."
+                  />
+                ) : (
+                  <Textarea
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    rows={5}
+                    className="font-mono text-sm"
+                    placeholder="CN=...,DC=..."
+                  />
+                )}
+              </>
+            ) : syntax === 'generalizedTime' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Enter time in LDAP format (YYYYMMDDHHMMSS.0Z). Clear to delete the attribute.
+                </p>
+                <Input
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="font-mono text-sm"
+                  placeholder="20260101000000.0Z"
+                />
+              </>
+            ) : syntax === 'numericString' ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Enter a numeric string. Clear to delete the attribute.
+                </p>
+                <Input
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="font-mono text-sm"
+                  pattern="[0-9 ]*"
+                />
+              </>
+            ) : singleValued ? (
               <>
                 <p className="text-xs text-muted-foreground">
                   Clear the value to delete the attribute.
