@@ -45,10 +45,9 @@ services:
       # Global Catalog SSL
       - "${BIND_IP:-127.0.0.1}:3269:3269/tcp"
     networks:
-      samba-net:
-        ipv4_address: 172.21.0.10
+      - samba-net
     dns:
-      - 172.21.0.10
+      - 127.0.0.1
       - 8.8.8.8
     restart: unless-stopped
     healthcheck:
@@ -97,7 +96,7 @@ services:
     volumes:
       - ./seed:/seed:ro
     environment:
-      LDAP_HOST: "172.21.0.10"
+      LDAP_HOST: "samba-ad"
       LDAP_ADMIN_PASSWORD: ${SAMBA_ADMIN_PASS}
       DOMAIN_DC: ${LDAP_BASE_DN}
       REALM_LOWER: ${SAMBA_REALM_LOWER}
@@ -116,7 +115,3 @@ volumes:
 
 networks:
   samba-net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.21.0.0/24
