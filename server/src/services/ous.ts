@@ -153,3 +153,31 @@ export const renameOu = async (
 
   return newDn
 }
+
+/**
+ * Move an OU to a different container via modifyDN.
+ * Returns the new DN.
+ */
+export const moveOu = async (
+  credentials: Credentials,
+  dn: string,
+  targetOu: string,
+): Promise<string> => {
+  const firstRdn = dn.substring(0, dn.indexOf(','))
+  const newDn = `${firstRdn},${targetOu}`
+
+  const client = await createBoundClient(config.ldap.url, credentials.dn, credentials.password)
+  try {
+    await client.modifyDN(dn, newDn)
+  } catch (err) {
+    const error = err as Error & { statusCode?: number }
+    const wrappedErr = new Error(`Failed to move OU: ${error.message}`) as Error & { statusCode: number; code: string }
+    wrappedErr.statusCode = error.statusCode || 400
+    wrappedErr.code = 'OU_MOVE_FAILED'
+    throw wrappedErr
+  } finally {
+    await unbind(client)
+  }
+
+  return newDn
+}

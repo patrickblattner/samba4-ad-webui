@@ -2,8 +2,8 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
-import { createOuSchema, updateOuSchema, renameOuSchema } from '../schemas.js'
-import { createOu, updateOu, deleteOu, renameOu } from '../services/ous.js'
+import { createOuSchema, updateOuSchema, renameOuSchema, moveSchema } from '../schemas.js'
+import { createOu, updateOu, deleteOu, renameOu, moveOu } from '../services/ous.js'
 
 const router = Router()
 
@@ -86,6 +86,29 @@ router.post('/rename', requireAuth, validateBody(renameOuSchema), async (req, re
     }
 
     const newDn = await renameOu(authReq.credentials, dn, req.body.newName)
+    res.json({ newDn })
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * POST /api/ous/move?dn=<dn>
+ * Move an OU to a different container.
+ */
+router.post('/move', requireAuth, validateBody(moveSchema), async (req, res, next) => {
+  try {
+    const authReq = req as AuthenticatedRequest
+    const dn = req.query.dn as string
+
+    if (!dn) {
+      res.status(400).json({
+        error: { code: 'MISSING_DN', message: 'Query parameter "dn" is required' },
+      })
+      return
+    }
+
+    const newDn = await moveOu(authReq.credentials, dn, req.body.targetOu)
     res.json({ newDn })
   } catch (err) {
     next(err)
