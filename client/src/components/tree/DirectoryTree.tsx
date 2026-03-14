@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { ChevronRight, FolderOpen, Folder, Database, Loader2 } from 'lucide-react'
 import type { TreeNode } from '@samba-ad/shared'
 import { useQueryClient } from '@tanstack/react-query'
@@ -14,11 +15,15 @@ function NodeIcon({ type, isExpanded }: { type: TreeNode['type']; isExpanded: bo
     case 'domain':
       return <Database className={cn(className, 'text-blue-600')} />
     case 'ou':
-    case 'container':
-    case 'builtinDomain':
       return isExpanded
         ? <FolderOpen className={cn(className, 'text-amber-600')} />
         : <Folder className={cn(className, 'text-amber-600')} />
+    case 'container':
+    case 'systemContainer':
+    case 'builtinDomain':
+      return isExpanded
+        ? <FolderOpen className={cn(className, 'text-slate-400')} />
+        : <Folder className={cn(className, 'text-slate-400')} />
     default:
       return <Folder className={className} />
   }
@@ -58,6 +63,7 @@ function TreeNodeItem({ node, level }: TreeNodeItemProps) {
   return (
     <div>
       <TreeContextMenu
+        nodeType={node.type}
         onNewUser={() => { selectNode(node.dn); openDialog('createUser') }}
         onNewGroup={() => { selectNode(node.dn); openDialog('createGroup') }}
         onNewComputer={() => { selectNode(node.dn); openDialog('createComputer') }}
@@ -109,6 +115,13 @@ function TreeNodeItem({ node, level }: TreeNodeItemProps) {
 
 export default function DirectoryTree() {
   const { data: roots, isLoading, error } = useTreeRoot()
+  const { expandedNodes, toggleNode } = useDirectoryStore()
+
+  useEffect(() => {
+    if (roots && roots.length === 1 && roots[0].type === 'domain' && !expandedNodes.has(roots[0].dn)) {
+      toggleNode(roots[0].dn)
+    }
+  }, [roots])
 
   if (isLoading) {
     return (

@@ -12,8 +12,8 @@ const determineNodeType = (objectClass: string[]): TreeNode['type'] => {
   const classes = objectClass.map(c => c.toLowerCase())
   if (classes.includes('organizationalunit')) return 'ou'
   if (classes.includes('builtindomain')) return 'builtinDomain'
-  if (classes.includes('container')) return 'container'
-  return 'container'
+  if (classes.includes('container')) return 'systemContainer'
+  return 'systemContainer'
 }
 
 /**

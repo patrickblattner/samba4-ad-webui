@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { TreeNode } from '@samba-ad/shared'
 import { requireAuth } from '../middleware/auth.js'
 import type { AuthenticatedRequest } from '../middleware/auth.js'
 import { getTreeChildren } from '../services/tree.js'
@@ -8,15 +9,28 @@ const router = Router()
 
 /**
  * GET /api/tree
- * Get root tree nodes (children of baseDn).
+ * Get domain root node (synthetic node wrapping baseDn).
  * Query: ?base=<dn> (optional, defaults to config baseDn)
  */
 router.get('/', requireAuth, async (req, res, next) => {
   try {
-    const authReq = req as AuthenticatedRequest
     const baseDn = (req.query.base as string) || config.ldap.baseDn
-    const nodes = await getTreeChildren(authReq.credentials, baseDn)
-    res.json(nodes)
+
+    // Extract domain name from baseDn (e.g. "DC=lab,DC=dev" -> "lab.dev")
+    const domainName = baseDn
+      .split(',')
+      .filter(part => part.trim().toUpperCase().startsWith('DC='))
+      .map(part => part.trim().substring(3))
+      .join('.')
+
+    const domainRoot: TreeNode = {
+      dn: baseDn,
+      name: domainName,
+      type: 'domain',
+      hasChildren: true,
+    }
+
+    res.json([domainRoot])
   } catch (err) {
     next(err)
   }

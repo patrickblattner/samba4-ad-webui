@@ -8,11 +8,10 @@ Tasks are ordered by priority within each column.
 
 ## In Progress
 
-### Setup-Skript und Production-Readiness (analog RAR) (#47)
-- [ ] `setup.sh` im Repo-Root — interaktiver Setup-Wizard
-- [ ] Express serviert Frontend-Dist in Production
-- [ ] Docker-Container unterstützt Self-signed SSL
-- [ ] `README.md` mit Installationsanleitung analog RAR
+### Domain-Root-Knoten, System-Container-Kennzeichnung und kontextsensitives Context-Menü (#48)
+- [ ] Domain-Root-Knoten im Tree mit Rechtsklick → New OU
+- [ ] System-Container visuell unterscheiden (grau/muted)
+- [ ] Context-Menü kontextsensitiv (OUs vs Container vs Domain)
 
 ---
 
@@ -26,6 +25,7 @@ Tasks are ordered by priority within each column.
 
 ## Done
 
+- [#47 Setup-Skript und Production-Readiness (analog RAR)](https://github.com/patrickblattner/samba4-ad-webui/issues/47)
 - [#46 fix: commit missing files that break CI Docker build](https://github.com/patrickblattner/samba4-ad-webui/issues/46)
 - [#45 Silent token refresh: auto-renew JWT before expiry](https://github.com/patrickblattner/samba4-ad-webui/issues/45)
 - [#44 Attribute Editor: schema-driven types, syntax-aware editing, system-only enforcement](https://github.com/patrickblattner/samba4-ad-webui/issues/44)

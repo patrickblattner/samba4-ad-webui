@@ -82,7 +82,8 @@ It runs automatically for standard flow (with Planner) or multiple tickets, and 
 → Findings? → Spawn Coder to fix → re-run QA + Security + Reviewer (max 2 cycles)
 → Improvement suggestions? → create new backlog tickets (do NOT fix now)
 → git push
-→ Report to user
+→ Wait for GitHub Actions workflow → if failed: Coder fixes + push (max 2 cycles)
+→ Report to user (summary + CI status)
 ```
 
 **Self-check before reporting to user:**
