@@ -1,0 +1,25 @@
+# structure.ldif – Organisational Units
+
+dn: OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: organizationalUnit
+ou: Dev
+description: Development Department
+
+dn: OU=Users,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: organizationalUnit
+ou: Users
+description: Dev Users
+
+dn: OU=Groups,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: organizationalUnit
+ou: Groups
+description: Dev Groups
+
+dn: OU=ServiceAccounts,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: organizationalUnit
+ou: ServiceAccounts
+description: Service Accounts fuer Applikationen

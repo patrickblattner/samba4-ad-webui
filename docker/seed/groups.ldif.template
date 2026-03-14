@@ -1,0 +1,57 @@
+# groups.ldif – Gruppen inkl. Nested Groups
+# CN entspricht dem von samba-tool generierten "Vorname Nachname"
+
+# -- Basis-Gruppen -------------------------------------------------------
+
+dn: CN=Engineers,OU=Groups,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: group
+cn: Engineers
+sAMAccountName: Engineers
+description: Alle Engineers
+groupType: -2147483646
+member: CN=Patrick Blattner,OU=Users,OU=Dev,__DOMAIN_DC__
+member: CN=Max Tester,OU=Users,OU=Dev,__DOMAIN_DC__
+
+dn: CN=Managers,OU=Groups,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: group
+cn: Managers
+sAMAccountName: Managers
+description: Alle Manager
+groupType: -2147483646
+member: CN=Angela Mueller,OU=Users,OU=Dev,__DOMAIN_DC__
+
+dn: CN=QA,OU=Groups,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: group
+cn: QA
+sAMAccountName: QA
+description: QA Team
+groupType: -2147483646
+member: CN=Max Tester,OU=Users,OU=Dev,__DOMAIN_DC__
+
+# -- Nested Group Beispiel ------------------------------------------------
+
+dn: CN=AllStaff,OU=Groups,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: group
+cn: AllStaff
+sAMAccountName: AllStaff
+description: Alle Mitarbeiter (nested: Engineers + Managers + QA)
+groupType: -2147483646
+member: CN=Engineers,OU=Groups,OU=Dev,__DOMAIN_DC__
+member: CN=Managers,OU=Groups,OU=Dev,__DOMAIN_DC__
+member: CN=QA,OU=Groups,OU=Dev,__DOMAIN_DC__
+
+# -- App-Zugriff Gruppe ---------------------------------------------------
+
+dn: CN=AppAccess,OU=Groups,OU=Dev,__DOMAIN_DC__
+objectClass: top
+objectClass: group
+cn: AppAccess
+sAMAccountName: AppAccess
+description: Zugriff auf die Applikation
+groupType: -2147483646
+member: CN=Patrick Blattner,OU=Users,OU=Dev,__DOMAIN_DC__
+member: CN=Angela Mueller,OU=Users,OU=Dev,__DOMAIN_DC__
