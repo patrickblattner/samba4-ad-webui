@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import OuGeneralTab from './tabs/OuGeneralTab'
+import ObjectTab from '@/components/objects/ObjectTab'
 import AttributeEditorTab from '@/components/attributes/AttributeEditorTab'
 
 interface OuPropertiesDialogProps {
@@ -111,6 +112,7 @@ export default function OuPropertiesDialog({
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="general">General</TabsTrigger>
+                <TabsTrigger value="object">Object</TabsTrigger>
                 <TabsTrigger value="attributeEditor">Attribute Editor</TabsTrigger>
               </TabsList>
 
@@ -121,6 +123,9 @@ export default function OuPropertiesDialog({
                     draft={draft}
                     onChange={handleChange}
                   />
+                </TabsContent>
+                <TabsContent value="object">
+                  <ObjectTab dn={dn!} />
                 </TabsContent>
                 <TabsContent value="attributeEditor">
                   <AttributeEditorTab dn={dn!} />
