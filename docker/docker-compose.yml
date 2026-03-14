@@ -46,9 +46,9 @@ services:
       - "${BIND_IP:-127.0.0.1}:3269:3269/tcp"
     networks:
       samba-net:
-        ipv4_address: 172.20.0.10
+        ipv4_address: 172.21.0.10
     dns:
-      - 172.20.0.10
+      - 172.21.0.10
       - 8.8.8.8
     restart: unless-stopped
     healthcheck:
@@ -97,7 +97,7 @@ services:
     volumes:
       - ./seed:/seed:ro
     environment:
-      LDAP_HOST: "172.20.0.10"
+      LDAP_HOST: "172.21.0.10"
       LDAP_ADMIN_PASSWORD: ${SAMBA_ADMIN_PASS}
       DOMAIN_DC: ${LDAP_BASE_DN}
       REALM_LOWER: ${SAMBA_REALM_LOWER}
@@ -119,4 +119,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/24
+        - subnet: 172.21.0.0/24
