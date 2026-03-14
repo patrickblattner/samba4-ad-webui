@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createOu, updateOu, deleteOu, renameOu } from '@/api/ous'
+import { createOu, updateOu, deleteOu, renameOu, moveOu } from '@/api/ous'
 
 export function useCreateOu() {
   const qc = useQueryClient()
@@ -41,6 +41,18 @@ export function useRenameOu() {
   return useMutation({
     mutationFn: ({ dn, newName }: { dn: string; newName: string }) =>
       renameOu(dn, newName),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tree'] })
+      qc.invalidateQueries({ queryKey: ['objects'] })
+    },
+  })
+}
+
+export function useMoveOu() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dn, targetOu }: { dn: string; targetOu: string }) =>
+      moveOu(dn, targetOu),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tree'] })
       qc.invalidateQueries({ queryKey: ['objects'] })

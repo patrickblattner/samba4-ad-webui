@@ -15,3 +15,7 @@ export function deleteOu(dn: string, recursive: boolean): Promise<{ success: boo
 export function renameOu(dn: string, newName: string): Promise<{ newDn: string }> {
   return apiPost<{ newDn: string }>(`/api/ous/rename?dn=${encodeURIComponent(dn)}`, { newName })
 }
+
+export function moveOu(dn: string, targetOu: string): Promise<{ newDn: string }> {
+  return apiPost<{ newDn: string }>(`/api/ous/move?dn=${encodeURIComponent(dn)}`, { targetOu })
+}
